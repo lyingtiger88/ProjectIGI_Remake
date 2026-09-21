@@ -1,17 +1,36 @@
+# Unreal generated
 Binaries/
 DerivedDataCache/
 Intermediate/
 Saved/
+Build/
+StagedBuilds/
+
+# Visual Studio / Rider
 .vs/
-*.VC.db
-*.VC.opendb
+.idea/
 *.sln
 *.suo
 *.opensdf
 *.sdf
+*.VC.db
+*.VC.opendb
+*.user
+*.userprefs
 *.tmp
 *.pdb
 *.ipch
 *.log
-Build/
-StagedBuilds/
+
+# Plugin build output
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Keep project source/config/content metadata explicit
+!Config/
+!Source/
+!Plugins/
