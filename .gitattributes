@@ -1,0 +1,14 @@
+* text=auto
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.cs text eol=crlf
+*.cpp text eol=lf
+*.h text eol=lf
+*.ini text eol=crlf
+*.md text eol=lf
+*.uproject text eol=lf
+*.uplugin text eol=lf
+
+*.uasset binary
+*.umap binary
