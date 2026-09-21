@@ -1,0 +1,3 @@
+[submodule "Plugins/ALS"]
+	path = Plugins/ALS
+	url = https://github.com/Sixze/ALS-Refactored.git
