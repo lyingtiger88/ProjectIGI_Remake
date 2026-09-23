@@ -34,6 +34,12 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
     FName MuzzleSocket = TEXT("Muzzle");
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
+    bool bDualWield = false;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual", meta = (EditCondition = "bDualWield"))
+    FName SecondaryMuzzleSocket = TEXT("Muzzle_L");
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Carry")
     TArray<EIGICarrySlot> CompatibleCarrySlots;
 
@@ -99,4 +105,7 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual", meta = (ClampMin = "0.0"))
     float BaseMuzzleFlashScale = 1.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+    EIGISmokePurpose SmokePurpose = EIGISmokePurpose::Tactical;
 };
