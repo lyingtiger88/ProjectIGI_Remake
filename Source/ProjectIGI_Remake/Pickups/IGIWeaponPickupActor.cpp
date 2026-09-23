@@ -8,6 +8,7 @@
 #include "Weapons/IGIFirearmBase.h"
 #include "Weapons/IGIWeaponBase.h"
 #include "Weapons/IGIWeaponDataAsset.h"
+#include "UObject/Package.h"
 
 AIGIWeaponPickupActor::AIGIWeaponPickupActor()
 {
@@ -139,7 +140,7 @@ UIGIWeaponDataAsset* AIGIWeaponPickupActor::ResolveWeaponData()
 
 UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateGlock17PrototypeData()
 {
-    UIGIWeaponDataAsset* Data = NewObject<UIGIWeaponDataAsset>(this, TEXT("Runtime_Glock17_Data"));
+    UIGIWeaponDataAsset* Data = NewObject<UIGIWeaponDataAsset>(GetTransientPackage());
     if (!IsValid(Data))
     {
         return nullptr;
