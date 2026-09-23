@@ -53,8 +53,16 @@ This roadmap is intentionally implementation-focused and may change as prototype
 
 ## Milestone 6 — Stealth & AI
 
-- [ ] perception
-- [ ] suspicion/alert states
+- [x] BDFR AI plugin integration
+- [x] player footprint emission
+- [x] player scent emission
+- [x] physical surface mapping for tracks
+- [x] difficulty-gated human footprint tracking
+- [x] canine scent tracking controller
+- [x] base sight/hearing/damage perception via BDFR
+- [ ] visible footprint decals / presentation
+- [ ] Behavior Tree tasks for trail navigation
+- [ ] suspicion/alert game-state integration
 - [ ] cover behavior
 - [ ] search behavior
 - [ ] squad coordination
