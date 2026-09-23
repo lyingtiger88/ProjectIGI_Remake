@@ -8,6 +8,8 @@
 
 class UAlsAnimationInstance;
 class UBDFRAcousticExposureComponent;
+class UBDFRCaptivityComponent;
+class UBDFRInterrogationComponent;
 class UBDFRDistressComponent;
 class UBDFRHealthComponent;
 class UBDFRInjuryResponseComponent;
@@ -41,6 +43,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "IGI|AI|Acoustics")
 	UBDFRAcousticExposureComponent* GetBDFRAcousticExposureComponent() const { return AcousticExposureComponent; }
 
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Captivity")
+	UBDFRCaptivityComponent* GetBDFRCaptivityComponent() const { return CaptivityComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Captivity")
+	UBDFRInterrogationComponent* GetBDFRInterrogationComponent() const { return InterrogationComponent; }
+
 protected:
 	virtual void BDFR_SetDesiredGait_Implementation(FGameplayTag GaitTag) override;
 	virtual void BDFR_SetDesiredStance_Implementation(FGameplayTag StanceTag) override;
@@ -64,6 +72,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|AI|Acoustics")
 	TObjectPtr<UBDFRAcousticExposureComponent> AcousticExposureComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|AI|Captivity")
+	TObjectPtr<UBDFRCaptivityComponent> CaptivityComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|AI|Captivity")
+	TObjectPtr<UBDFRInterrogationComponent> InterrogationComponent;
 
 private:
 	void RefreshAlsAnimationInstance();
