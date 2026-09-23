@@ -10,5 +10,6 @@ class PROJECTIGI_REMAKE_API AIGIDogAIController : public ABDFRCanineAIController
 	GENERATED_BODY()
 
 protected:
+	virtual void OnPossess(APawn* InPawn) override;
 	virtual bool BDFR_ShouldProcessPerceivedActor_Implementation(AActor* SourceActor) const override;
 };
