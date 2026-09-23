@@ -848,7 +848,7 @@ void AIGIPlayerCharacter::Input_OnVisionZoomIn()
 {
 	if (IsValid(VisionComponent))
 	{
-		VisionComponent->AdjustBinocularZoom(-4.0f);
+		VisionComponent->ZoomBinocularsIn();
 	}
 }
 
@@ -856,7 +856,7 @@ void AIGIPlayerCharacter::Input_OnVisionZoomOut()
 {
 	if (IsValid(VisionComponent))
 	{
-		VisionComponent->AdjustBinocularZoom(4.0f);
+		VisionComponent->ZoomBinocularsOut();
 	}
 }
 
