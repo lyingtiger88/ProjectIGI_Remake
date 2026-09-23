@@ -5,6 +5,7 @@
 #include "Environment/IGIWeatherTypes.h"
 #include "IGIShellCasingActor.generated.h"
 
+class UPrimitiveComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
 
@@ -37,9 +38,26 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IGI|Weapon|Casing")
     float WindForceScale = 0.018f;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IGI|Weapon|Casing|Acoustics", meta = (ClampMin = "0"))
+    int32 MaxAudibleImpacts = 2;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IGI|Weapon|Casing|Acoustics", meta = (ClampMin = "0.0"))
+    float MinimumAudibleImpactImpulse = 12.0f;
+
 private:
     FIGIWeatherState SpawnWeatherState;
     float WeatherWindResponse = 0.0f;
+    int32 AudibleImpactCount = 0;
+
+    UFUNCTION()
+    void HandleCasingHit(
+        UPrimitiveComponent* HitComponent,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComponent,
+        FVector NormalImpulse,
+        const FHitResult& Hit);
 
     void ApplyWeatherProfile();
+    float GetWeatherImpactNoiseMultiplier() const;
+    static float GetSurfaceImpactNoiseMultiplier(EPhysicalSurface SurfaceType);
 };
