@@ -179,7 +179,7 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
         Inventory->AddAmmo(
             ResolvedWeaponData->AmmoType,
             InitialReserveAmmo,
-            FMath::Max(InitialReserveAmmo, ResolvedWeaponData->MaxReserveAmmo));
+            FMath::Max(1, ResolvedWeaponData->MaxReserveAmmo));
     }
 
     bool bEquipped = false;
