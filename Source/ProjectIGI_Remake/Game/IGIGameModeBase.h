@@ -4,7 +4,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "IGIGameModeBase.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable, BlueprintType, meta = (DisplayName = "IGI Game Mode"))
 class PROJECTIGI_REMAKE_API AIGIGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
