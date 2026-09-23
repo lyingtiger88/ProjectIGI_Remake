@@ -5,7 +5,7 @@
 #include "Environment/IGIWeatherTypes.h"
 #include "IGIWeatherWorldSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FIGIWeatherChangedSignature, const FIGIWeatherState&, WeatherState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FIGIWeatherChangedSignature, FIGIWeatherState, WeatherState);
 
 UCLASS(BlueprintType)
 class PROJECTIGI_REMAKE_API UIGIWeatherWorldSubsystem : public UWorldSubsystem
