@@ -40,6 +40,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "IGI|Weapon|Ammo")
     int32 ExtractMagazineAmmo(int32 Amount);
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Weapon|Ammo")
+    void SetCurrentMagazineAmmo(int32 NewAmount);
+
     UFUNCTION(BlueprintCallable, Category = "IGI|Weapon")
     bool NotifyShotFired();
 
