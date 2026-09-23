@@ -19,15 +19,19 @@
 
 ProjectIGI Remake is built with a hybrid Unreal Engine workflow:
 
-- C++ for core gameplay, AI, and systems
+- C++ for core gameplay, AI, combat, inventory, and stealth systems
 - Blueprint for content setup and rapid iteration
 - INI configuration for engine/runtime settings
 - Materials and shaders for rendering systems
+
+Current gameplay foundations include ALS locomotion, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, suppressor-aware AI hearing, and movement/load acoustic signatures.
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Build Guide](docs/BUILD.md)
+- [Weapons, Inventory & Attachments](docs/WEAPONS_INVENTORY_ATTACHMENTS.md)
+- [Acoustic Stealth & AI Hearing](docs/ACOUSTIC_STEALTH.md)
 - [Footprint & Scent Tracking](docs/TRACKING_SCENT.md)
 - [Language & Technology Stack](docs/LANGUAGES.md)
 - [Roadmap](docs/ROADMAP.md)
