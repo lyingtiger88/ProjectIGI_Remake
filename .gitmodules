@@ -1,3 +1,6 @@
 [submodule "Plugins/ALS"]
 	path = Plugins/ALS
 	url = https://github.com/Sixze/ALS-Refactored.git
+[submodule "Plugins/BDFR_InteractiveAI"]
+	path = Plugins/BDFR_InteractiveAI
+	url = https://github.com/lyingtiger88/BDFR_InteractiveAI.git
