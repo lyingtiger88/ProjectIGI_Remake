@@ -113,6 +113,65 @@ int32 UIGILootableInventoryComponent::LootAllRemainingAmmunitionToInventory(
     return TotalTransferred;
 }
 
+int32 UIGILootableInventoryComponent::LootAllMedKits(AActor* RecipientActor)
+{
+    UIGIInventoryComponent* RecipientInventory =
+        IsValid(RecipientActor)
+            ? RecipientActor->FindComponentByClass<UIGIInventoryComponent>()
+            : nullptr;
+
+    return LootAllMedKitsToInventory(RecipientInventory);
+}
+
+int32 UIGILootableInventoryComponent::LootAllMedKitsToInventory(
+    UIGIInventoryComponent* RecipientInventory)
+{
+    UIGIInventoryComponent* SourceInventory = GetSourceInventory();
+
+    if (!IsValid(SourceInventory) ||
+        !IsValid(RecipientInventory) ||
+        SourceInventory == RecipientInventory)
+    {
+        return 0;
+    }
+
+    const int32 Available =
+        SourceInventory->GetEquipmentCount(EIGIEquipmentType::MedKit);
+
+    if (Available <= 0)
+    {
+        return 0;
+    }
+
+    const int32 Accepted =
+        RecipientInventory->AddEquipment(EIGIEquipmentType::MedKit, Available);
+
+    if (Accepted > 0)
+    {
+        SourceInventory->ConsumeEquipment(EIGIEquipmentType::MedKit, Accepted);
+    }
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("IGI loot med kits: source=%s available=%d transferred=%d remaining=%d"),
+        *GetNameSafe(GetOwner()),
+        Available,
+        Accepted,
+        SourceInventory->GetEquipmentCount(EIGIEquipmentType::MedKit));
+
+    return Accepted;
+}
+
+int32 UIGILootableInventoryComponent::GetRemainingMedKitCount() const
+{
+    const UIGIInventoryComponent* SourceInventory = GetSourceInventory();
+
+    return IsValid(SourceInventory)
+        ? SourceInventory->GetEquipmentCount(EIGIEquipmentType::MedKit)
+        : 0;
+}
+
 int32 UIGILootableInventoryComponent::GetTotalRemainingRounds(
     const bool bIncludeLoadedMagazines) const
 {
