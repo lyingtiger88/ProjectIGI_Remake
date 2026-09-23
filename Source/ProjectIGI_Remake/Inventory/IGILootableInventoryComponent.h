@@ -25,6 +25,15 @@ public:
     UFUNCTION(BlueprintPure, Category = "IGI|Loot")
     int32 GetTotalRemainingRounds(bool bIncludeLoadedMagazines = true) const;
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Loot")
+    int32 LootAllMedKits(AActor* RecipientActor);
+
+    UFUNCTION(BlueprintCallable, Category = "IGI|Loot")
+    int32 LootAllMedKitsToInventory(UIGIInventoryComponent* RecipientInventory);
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Loot")
+    int32 GetRemainingMedKitCount() const;
+
 private:
     UIGIInventoryComponent* GetSourceInventory() const;
 };
