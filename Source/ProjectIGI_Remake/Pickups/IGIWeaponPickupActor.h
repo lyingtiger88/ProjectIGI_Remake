@@ -8,6 +8,7 @@ class AIGIWeaponBase;
 class UPrimitiveComponent;
 class USphereComponent;
 class UStaticMeshComponent;
+class USkeletalMesh;
 class UIGIWeaponDataAsset;
 
 UENUM(BlueprintType)
@@ -44,6 +45,9 @@ protected:
     // before binary Data Assets are authored and committed.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype")
     EIGIPrototypeWeaponPreset PrototypePreset = EIGIPrototypeWeaponPreset::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype")
+    TSoftObjectPtr<USkeletalMesh> PrototypeWeaponMesh;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup")
     bool bAutoEquip = true;
