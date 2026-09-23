@@ -6,6 +6,7 @@
 #include "IGIPlayerCharacter.h"
 #include "Inventory/IGIInventoryComponent.h"
 #include "Weapons/IGIFirearmBase.h"
+#include "Weapons/IGIFlareGunBase.h"
 #include "Weapons/IGIWeaponBase.h"
 #include "Weapons/IGIWeaponDataAsset.h"
 #include "UObject/Package.h"
@@ -109,7 +110,12 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
         return false;
     }
 
-    if (!WeaponClass || WeaponClass->HasAnyClassFlags(CLASS_Abstract))
+    if (ResolvedWeaponData->WeaponId == EIGIWeaponId::FlareGun &&
+        (!WeaponClass || WeaponClass == AIGIFirearmBase::StaticClass()))
+    {
+        WeaponClass = AIGIFlareGunBase::StaticClass();
+    }
+    else if (!WeaponClass || WeaponClass->HasAnyClassFlags(CLASS_Abstract))
     {
         UE_LOG(
             LogTemp,
@@ -222,6 +228,10 @@ UIGIWeaponDataAsset* AIGIWeaponPickupActor::ResolveWeaponData()
     {
         RuntimePrototypeData = CreateGlock17PrototypeData();
     }
+    else if (PrototypePreset == EIGIPrototypeWeaponPreset::FlareGun)
+    {
+        RuntimePrototypeData = CreateFlareGunPrototypeData();
+    }
 
     return RuntimePrototypeData;
 }
@@ -278,6 +288,62 @@ UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateGlock17PrototypeData()
     Data->MuzzleFlashEffect = PrototypeMuzzleFlashEffect;
     Data->MuzzleSmokeEffect = PrototypeMuzzleSmokeEffect;
     Data->ShellCasingMesh = PrototypeCasingMesh;
+
+    return Data;
+}
+
+
+UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateFlareGunPrototypeData()
+{
+    UIGIWeaponDataAsset* Data = NewObject<UIGIWeaponDataAsset>(GetTransientPackage());
+    if (!IsValid(Data))
+    {
+        return nullptr;
+    }
+
+    Data->WeaponId = EIGIWeaponId::FlareGun;
+    Data->DisplayName = FText::FromString(TEXT("Flare Gun"));
+    Data->WeaponMesh = PrototypeWeaponMesh;
+
+    if (PrototypeWeaponMesh.IsNull() && IsValid(PickupMesh) && IsValid(PickupMesh->GetStaticMesh()))
+    {
+        Data->WeaponStaticMesh = PickupMesh->GetStaticMesh();
+    }
+
+    Data->WeaponFamily = EIGIWeaponFamily::Launcher;
+    Data->HandlingProfile = EIGIHandlingProfile::Pistol;
+    Data->CompatibleCarrySlots = {
+        EIGICarrySlot::Weapon03,
+        EIGICarrySlot::Weapon04,
+        EIGICarrySlot::Weapon01,
+        EIGICarrySlot::Weapon02
+    };
+    Data->WeightKg = 0.75f;
+    Data->CarryNoiseContribution = 0.025f;
+    Data->AmmoType = TEXT("Flare");
+    Data->MagazineCapacity = 1;
+    Data->MaxReserveAmmo = 6;
+    Data->SupportedFireModes = {EIGIFireMode::SemiAutomatic};
+    Data->DefaultFireMode = EIGIFireMode::SemiAutomatic;
+    Data->BaseDamage = 0.0f;
+    Data->EffectiveRangeCm = 12000.0f;
+    Data->BaseRecoil = 1.30f;
+    Data->BaseSpread = 0.20f;
+    Data->AimSpeedMultiplier = 0.95f;
+    Data->BaseShotHearingRadius = 3500.0f;
+    Data->EquipNoiseLoudness = 0.08f;
+    Data->EquipNoiseRadius = 500.0f;
+    Data->ReloadNoiseLoudness = 0.12f;
+    Data->ReloadNoiseRadius = 650.0f;
+    Data->BaseMuzzleFlashScale = 1.25f;
+    Data->MuzzleFlashEffect = PrototypeMuzzleFlashEffect;
+    Data->MuzzleSmokeEffect = PrototypeMuzzleSmokeEffect;
+    Data->MuzzleSmokeScale = 1.30f;
+    Data->FlarePurpose = PrototypeFlarePurpose;
+    Data->FlareProjectileMesh = PrototypeFlareProjectileMesh;
+    Data->FlareTrailEffect = PrototypeFlareTrailEffect;
+    Data->FlareLaunchSpeed = 1800.0f;
+    Data->FlareLifeSeconds = 22.0f;
 
     return Data;
 }
