@@ -117,7 +117,10 @@ bool AIGIEnemyAIController::ShouldAcceptDistraction(
 {
 	OutResponseScore = 0.0f;
 
-	if (!IsValid(GetPawn()) || EffectiveStrength < Tuning.MinimumStrength)
+	const float NormalizedStrength =
+		FMath::Clamp(EffectiveStrength, 0.0f, 1.0f);
+
+	if (!IsValid(GetPawn()) || NormalizedStrength < Tuning.MinimumStrength)
 	{
 		return false;
 	}
@@ -177,7 +180,7 @@ bool AIGIEnemyAIController::ShouldAcceptDistraction(
 		RepeatedDistractionCount * Tuning.RepeatPenaltyPerUse;
 
 	OutResponseScore = FMath::Clamp(
-		EffectiveStrength * 0.72f +
+		NormalizedStrength * 0.72f +
 		DistanceScore * 0.28f -
 		GetAwarenessPenalty(AwarenessLevel) -
 		RepeatPenalty,
