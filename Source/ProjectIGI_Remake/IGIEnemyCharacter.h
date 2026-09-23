@@ -7,6 +7,7 @@
 #include "IGIEnemyCharacter.generated.h"
 
 class UAlsAnimationInstance;
+class UBDFRAcousticExposureComponent;
 class UBDFRDistressComponent;
 class UBDFRHealthComponent;
 class UBDFRInjuryResponseComponent;
@@ -37,6 +38,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "IGI|AI|Health")
 	UBDFRDistressComponent* GetBDFRDistressComponent() const { return DistressComponent; }
 
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Acoustics")
+	UBDFRAcousticExposureComponent* GetBDFRAcousticExposureComponent() const { return AcousticExposureComponent; }
+
 protected:
 	virtual void BDFR_SetDesiredGait_Implementation(FGameplayTag GaitTag) override;
 	virtual void BDFR_SetDesiredStance_Implementation(FGameplayTag StanceTag) override;
@@ -57,6 +61,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|AI|Health")
 	TObjectPtr<UBDFRInjuryResponseComponent> InjuryResponseComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|AI|Acoustics")
+	TObjectPtr<UBDFRAcousticExposureComponent> AcousticExposureComponent;
 
 private:
 	void RefreshAlsAnimationInstance();
