@@ -148,6 +148,7 @@ enum class EIGIEquipmentType : uint8
     FragGrenade,
     Flashbang,
     SmokeGrenade,
+    MedKit,
     C4,
     ProximityMine,
     Claymore
