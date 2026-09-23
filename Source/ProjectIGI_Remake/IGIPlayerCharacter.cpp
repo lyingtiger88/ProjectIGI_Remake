@@ -4,6 +4,7 @@
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Combat/IGICombatComponent.h"
+#include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -15,6 +16,7 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "Inventory/IGIInventoryComponent.h"
+#include "InputCoreTypes.h"
 #include "Math/RotationMatrix.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
@@ -22,6 +24,7 @@
 #include "Tracking/BDFRTrackEmitterComponent.h"
 #include "Tracking/IGITrackingSurfaceComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Weapons/IGIFirearmBase.h"
 
 AIGIPlayerCharacter::AIGIPlayerCharacter()
 {
@@ -183,6 +186,16 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInput->BindAction(AimAction, ETriggerEvent::Triggered, this, &ThisClass::Input_OnAim);
 		EnhancedInput->BindAction(AimAction, ETriggerEvent::Canceled, this, &ThisClass::Input_OnAim);
 	}
+
+	// Prototype combat bindings are direct key bindings so the first weapon loop can be
+	// tested without committing binary Input Action assets to source control.
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &ThisClass::Input_OnFire);
+	PlayerInputComponent->BindKey(EKeys::R, IE_Pressed, this, &ThisClass::Input_OnReload);
+	PlayerInputComponent->BindKey(EKeys::One, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon01);
+	PlayerInputComponent->BindKey(EKeys::Two, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon02);
+	PlayerInputComponent->BindKey(EKeys::Three, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon03);
+	PlayerInputComponent->BindKey(EKeys::Four, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon04);
+	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ThisClass::Input_OnEquipKnife);
 }
 
 void AIGIPlayerCharacter::Landed(const FHitResult& Hit)
@@ -272,6 +285,114 @@ void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 		{
 			CombatComponent->StopAim();
 		}
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnFire()
+{
+	if (!IsValid(InventoryComponent))
+	{
+		return;
+	}
+
+	AIGIFirearmBase* Firearm = Cast<AIGIFirearmBase>(InventoryComponent->GetActiveWeapon());
+	if (!IsValid(Firearm))
+	{
+		return;
+	}
+
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->SetCombatState(EIGICombatState::Firing);
+	}
+
+	const bool bFired = Firearm->FireHitscan(GetController());
+
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->SetCombatState(
+			CombatComponent->IsAiming()
+				? EIGICombatState::Aiming
+				: EIGICombatState::Armed);
+	}
+
+	if (bFired)
+	{
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("IGI fired %s. Magazine: %d/%d"),
+			*Firearm->GetName(),
+			Firearm->GetCurrentMagazineAmmo(),
+			Firearm->GetMagazineCapacity());
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnReload()
+{
+	if (!IsValid(InventoryComponent))
+	{
+		return;
+	}
+
+	AIGIFirearmBase* Firearm = Cast<AIGIFirearmBase>(InventoryComponent->GetActiveWeapon());
+	if (!IsValid(Firearm))
+	{
+		return;
+	}
+
+	if (IsValid(CombatComponent) && !CombatComponent->BeginReload())
+	{
+		return;
+	}
+
+	const int32 ReloadedRounds = Firearm->ReloadFromInventory(InventoryComponent);
+
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->EndReload();
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("IGI reload %s: +%d rounds, magazine %d/%d."),
+		*Firearm->GetName(),
+		ReloadedRounds,
+		Firearm->GetCurrentMagazineAmmo(),
+		Firearm->GetMagazineCapacity());
+}
+
+void AIGIPlayerCharacter::Input_OnEquipWeapon01()
+{
+	EquipInventorySlot(EIGICarrySlot::Weapon01);
+}
+
+void AIGIPlayerCharacter::Input_OnEquipWeapon02()
+{
+	EquipInventorySlot(EIGICarrySlot::Weapon02);
+}
+
+void AIGIPlayerCharacter::Input_OnEquipWeapon03()
+{
+	EquipInventorySlot(EIGICarrySlot::Weapon03);
+}
+
+void AIGIPlayerCharacter::Input_OnEquipWeapon04()
+{
+	EquipInventorySlot(EIGICarrySlot::Weapon04);
+}
+
+void AIGIPlayerCharacter::Input_OnEquipKnife()
+{
+	EquipInventorySlot(EIGICarrySlot::Knife);
+}
+
+void AIGIPlayerCharacter::EquipInventorySlot(const EIGICarrySlot Slot)
+{
+	if (IsValid(InventoryComponent))
+	{
+		InventoryComponent->EquipWeaponInSlot(Slot);
 	}
 }
 
