@@ -5,6 +5,8 @@
 #include "Weapons/IGIWeaponTypes.h"
 #include "IGIWeaponDataAsset.generated.h"
 
+class AIGIShellCasingActor;
+class UNiagaraSystem;
 class USkeletalMesh;
 class UStaticMesh;
 
@@ -38,6 +40,42 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
     FName MuzzleSocket = TEXT("Muzzle");
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Shot FX")
+    TSoftObjectPtr<UNiagaraSystem> MuzzleFlashEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Shot FX")
+    TSoftObjectPtr<UNiagaraSystem> MuzzleSmokeEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Shot FX", meta = (ClampMin = "0.0"))
+    float MuzzleSmokeScale = 1.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Shot FX", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float SuppressedMuzzleSmokeMultiplier = 0.65f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing")
+    FName CasingEjectionSocket = TEXT("SCK_Casing_Eject");
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing")
+    TSubclassOf<AIGIShellCasingActor> ShellCasingClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing")
+    TSoftObjectPtr<UStaticMesh> ShellCasingMesh;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing", meta = (ClampMin = "0.0", ForceUnits = "cm/s"))
+    float CasingEjectionSpeed = 280.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing", meta = (ClampMin = "0.0", ForceUnits = "cm/s"))
+    float CasingUpwardSpeed = 90.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing", meta = (ClampMin = "0.0", ClampMax = "45.0"))
+    float CasingEjectionRandomConeDegrees = 10.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing", meta = (ClampMin = "0.0", ForceUnits = "deg/s"))
+    float CasingAngularSpeedDegrees = 1200.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual|Casing", meta = (ClampMin = "0.5", ForceUnits = "s"))
+    float CasingLifeSeconds = 8.0f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
     bool bDualWield = false;

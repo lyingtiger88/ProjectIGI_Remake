@@ -37,6 +37,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "IGI|Weapon|Ammo")
     int32 ReloadFromInventory(UIGIInventoryComponent* Inventory);
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Weapon|Ammo")
+    int32 ExtractMagazineAmmo(int32 Amount);
+
+    UFUNCTION(BlueprintCallable, Category = "IGI|Weapon|Ammo")
+    void SetCurrentMagazineAmmo(int32 NewAmount);
+
     UFUNCTION(BlueprintCallable, Category = "IGI|Weapon")
     bool NotifyShotFired();
 
@@ -69,4 +75,7 @@ protected:
     bool bLastShotHit = false;
 
     void ResetRuntimeWeaponState();
+    void PlayShotEffects();
+    void SpawnShellCasing();
+    FTransform GetWeaponSocketTransform(FName SocketName) const;
 };

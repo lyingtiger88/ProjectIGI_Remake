@@ -23,6 +23,7 @@ public class ProjectIGI_Remake : ModuleRules
 			"GameplayTags",
 			"PhysicsCore",
 			"AIModule",
+			"Niagara",
 			"ALS",
 			"BDFR_InteractiveAI"
 		});

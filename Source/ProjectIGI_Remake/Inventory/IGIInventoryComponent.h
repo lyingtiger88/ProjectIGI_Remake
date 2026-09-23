@@ -48,6 +48,23 @@ public:
     UFUNCTION(BlueprintPure, Category = "IGI|Inventory|Ammo")
     int32 GetAmmoCount(FName AmmoType) const;
 
+    UFUNCTION(BlueprintPure, Category = "IGI|Inventory|Ammo")
+    TArray<FName> GetAmmoTypes() const;
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Inventory")
+    TArray<AIGIWeaponBase*> GetStoredWeapons() const;
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Inventory|Ammo")
+    int32 GetAmmoCarryLimit(FName AmmoType) const;
+
+    // Moves only the rounds actually accepted by the recipient. Any overflow stays
+    // in the source inventory, so enemy/NPC loot is never invented or destroyed.
+    UFUNCTION(BlueprintCallable, Category = "IGI|Inventory|Ammo")
+    int32 TransferReserveAmmoTo(
+        UIGIInventoryComponent* RecipientInventory,
+        FName AmmoType,
+        int32 MaxRounds = -1);
+
     UFUNCTION(BlueprintCallable, Category = "IGI|Inventory|Equipment")
     int32 AddEquipment(EIGIEquipmentType EquipmentType, int32 Amount);
 
@@ -81,6 +98,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Carry")
     float NoisePerKgAboveThreshold = 0.015f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0"))
+    int32 DefaultAmmoCarryLimitPerType = 120;
 
 private:
     UPROPERTY(Transient)

@@ -160,3 +160,31 @@ failed to spawn weapon class
 ```
 
 The actor also exposes `TryPickupByActor` to Blueprint for manual interaction/debug paths.
+
+
+## Shot FX test
+
+The prototype pickup now exposes:
+
+```text
+Prototype Muzzle Flash Effect
+Prototype Muzzle Smoke Effect
+Prototype Casing Mesh
+```
+
+Assign Niagara muzzle flash/smoke systems and a casing Static Mesh, then fire the Glock.
+
+For correct production placement, add these sockets to the weapon mesh:
+
+```text
+Muzzle
+SCK_Casing_Eject
+```
+
+If your Niagara smoke uses the optional weather inputs, expose:
+
+```text
+User.WindVelocity
+User.PrecipitationIntensity
+User.SurfaceWetness
+```
