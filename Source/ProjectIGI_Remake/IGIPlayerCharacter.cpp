@@ -136,6 +136,7 @@ void AIGIPlayerCharacter::BeginPlay()
 void AIGIPlayerCharacter::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	UpdateProneRoll(DeltaSeconds);
 	RefreshCameraPresentation(DeltaSeconds);
 }
 
@@ -229,6 +230,10 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindKey(EKeys::Four, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon04);
 	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ThisClass::Input_OnEquipKnife);
 	PlayerInputComponent->BindKey(EKeys::Q, IE_Pressed, this, &ThisClass::Input_OnSwitchShoulder);
+
+	// Temporary source-only prone roll controls until dedicated Enhanced Input assets are authored.
+	PlayerInputComponent->BindKey(EKeys::Z, IE_Pressed, this, &ThisClass::Input_OnProneRollLeft);
+	PlayerInputComponent->BindKey(EKeys::X, IE_Pressed, this, &ThisClass::Input_OnProneRollRight);
 }
 
 void AIGIPlayerCharacter::Landed(const FHitResult& Hit)
@@ -267,8 +272,84 @@ float AIGIPlayerCharacter::GetProneNormalizedSpeed() const
 
 	const FVector Velocity = GetVelocity();
 	const float PlanarSpeed = FVector(Velocity.X, Velocity.Y, 0.0f).Size();
-	const float ReferenceSpeed = 375.0f * FMath::Max(ProneMovementInputScale, 0.05f);
+	const float MovementScale = IsProneSupine() ? SupineMovementInputScale : ProneMovementInputScale;
+	const float ReferenceSpeed = 375.0f * FMath::Max(MovementScale, 0.05f);
 	return FMath::Clamp(PlanarSpeed / ReferenceSpeed, 0.0f, 1.0f);
+}
+
+float AIGIPlayerCharacter::GetProneRollAlpha() const
+{
+	if (!bProneRolling || ProneRollDuration <= KINDA_SMALL_NUMBER)
+	{
+		return bProneRolling ? 1.0f : 0.0f;
+	}
+
+	return FMath::Clamp(ProneRollElapsed / ProneRollDuration, 0.0f, 1.0f);
+}
+
+float AIGIPlayerCharacter::GetProneAimYawAngle() const
+{
+	if (!IsProne() || !IsValid(GetController()))
+	{
+		return 0.0f;
+	}
+
+	return FMath::FindDeltaAngleDegrees(
+		GetActorRotation().Yaw,
+		GetController()->GetControlRotation().Yaw);
+}
+
+float AIGIPlayerCharacter::GetProneAimPitchAngle() const
+{
+	if (!IsProne() || !IsValid(GetController()))
+	{
+		return 0.0f;
+	}
+
+	return FMath::ClampAngle(GetController()->GetControlRotation().Pitch, -89.0f, 89.0f);
+}
+
+bool AIGIPlayerCharacter::StartProneRoll(const EIGIProneRollDirection Direction)
+{
+	if (!IsProne() || bProneRolling)
+	{
+		return false;
+	}
+
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	if (!IsValid(Movement) || !Movement->IsMovingOnGround())
+	{
+		return false;
+	}
+
+	ProneRollDirection = Direction;
+	ProneRollElapsed = 0.0f;
+	ProneRollTargetOrientation =
+		ProneOrientation == EIGIProneOrientation::ChestDown
+			? EIGIProneOrientation::Supine
+			: EIGIProneOrientation::ChestDown;
+
+	const float SideSign = Direction == EIGIProneRollDirection::Right ? 1.0f : -1.0f;
+	const FRotator ReferenceRotation = IsValid(GetController())
+		? FRotator(0.0f, GetController()->GetControlRotation().Yaw, 0.0f)
+		: FRotator(0.0f, GetActorRotation().Yaw, 0.0f);
+
+	ProneRollWorldDirection =
+		FRotationMatrix(ReferenceRotation).GetUnitAxis(EAxis::Y) * SideSign;
+
+	bProneRolling = true;
+
+	OnProneRollStarted.Broadcast(
+		ProneRollDirection,
+		ProneOrientation,
+		ProneRollTargetOrientation);
+
+	if (IsValid(AcousticSignatureComponent))
+	{
+		AcousticSignatureComponent->ReportProneRoll();
+	}
+
+	return true;
 }
 
 bool AIGIPlayerCharacter::SetPlayerStance(const EIGIPlayerStance NewStance)
@@ -276,6 +357,11 @@ bool AIGIPlayerCharacter::SetPlayerStance(const EIGIPlayerStance NewStance)
 	if (PlayerStance == NewStance)
 	{
 		return true;
+	}
+
+	if (bProneRolling)
+	{
+		return false;
 	}
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
@@ -342,6 +428,16 @@ bool AIGIPlayerCharacter::SetPlayerStance(const EIGIPlayerStance NewStance)
 	}
 
 	PlayerStance = NewStance;
+
+	if (PlayerStance == EIGIPlayerStance::Prone)
+	{
+		SetProneOrientation(EIGIProneOrientation::ChestDown);
+	}
+	else if (PreviousStance == EIGIPlayerStance::Prone)
+	{
+		SetProneOrientation(EIGIProneOrientation::ChestDown);
+	}
+
 	OnPlayerStanceChanged.Broadcast(PreviousStance, PlayerStance);
 
 	UE_LOG(
@@ -376,11 +472,16 @@ void AIGIPlayerCharacter::Input_OnMove(const FInputActionValue& ActionValue)
 		return;
 	}
 
+	if (bProneRolling)
+	{
+		return;
+	}
+
 	FVector2D Value = ActionValue.Get<FVector2D>();
 
 	if (IsProne())
 	{
-		Value *= ProneMovementInputScale;
+		Value *= IsProneSupine() ? SupineMovementInputScale : ProneMovementInputScale;
 	}
 
 	const FRotator ControlRotation = GetController()->GetControlRotation();
@@ -419,6 +520,11 @@ void AIGIPlayerCharacter::Input_OnWalk()
 
 void AIGIPlayerCharacter::Input_OnStancePressed()
 {
+	if (bProneRolling)
+	{
+		return;
+	}
+
 	bStanceHoldTriggered = false;
 
 	if (PlayerStance == EIGIPlayerStance::Prone)
@@ -468,6 +574,11 @@ void AIGIPlayerCharacter::TriggerProneFromStanceHold()
 
 void AIGIPlayerCharacter::Input_OnJump(const FInputActionValue& ActionValue)
 {
+	if (bProneRolling)
+	{
+		return;
+	}
+
 	if (ActionValue.Get<bool>())
 	{
 		if (PlayerStance == EIGIPlayerStance::Prone)
@@ -510,6 +621,11 @@ void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 
 void AIGIPlayerCharacter::Input_OnFire()
 {
+	if (bProneRolling)
+	{
+		return;
+	}
+
 	if (!IsValid(InventoryComponent))
 	{
 		return;
@@ -550,6 +666,11 @@ void AIGIPlayerCharacter::Input_OnFire()
 
 void AIGIPlayerCharacter::Input_OnReload()
 {
+	if (bProneRolling)
+	{
+		return;
+	}
+
 	if (!IsValid(InventoryComponent))
 	{
 		return;
@@ -611,6 +732,16 @@ void AIGIPlayerCharacter::Input_OnEquipKnife()
 void AIGIPlayerCharacter::Input_OnSwitchShoulder()
 {
 	bRightShoulderCamera = !bRightShoulderCamera;
+}
+
+void AIGIPlayerCharacter::Input_OnProneRollLeft()
+{
+	StartProneRoll(EIGIProneRollDirection::Left);
+}
+
+void AIGIPlayerCharacter::Input_OnProneRollRight()
+{
+	StartProneRoll(EIGIProneRollDirection::Right);
 }
 
 void AIGIPlayerCharacter::EquipInventorySlot(const EIGICarrySlot Slot)
@@ -690,6 +821,76 @@ bool AIGIPlayerCharacter::ResizeCapsuleKeepingFeet(const float TargetHalfHeight)
 	return true;
 }
 
+void AIGIPlayerCharacter::UpdateProneRoll(const float DeltaSeconds)
+{
+	if (!bProneRolling)
+	{
+		return;
+	}
+
+	if (!IsProne() || ProneRollDuration <= KINDA_SMALL_NUMBER)
+	{
+		FinishProneRoll();
+		return;
+	}
+
+	const float RemainingTime = FMath::Max(ProneRollDuration - ProneRollElapsed, 0.0f);
+	const float StepTime = FMath::Min(DeltaSeconds, RemainingTime);
+	const float StepDistance =
+		ProneRollDuration > KINDA_SMALL_NUMBER
+			? ProneRollDistance * (StepTime / ProneRollDuration)
+			: 0.0f;
+
+	if (StepDistance > KINDA_SMALL_NUMBER && !ProneRollWorldDirection.IsNearlyZero())
+	{
+		FHitResult Hit;
+		AddActorWorldOffset(ProneRollWorldDirection * StepDistance, true, &Hit);
+
+		if (Hit.bBlockingHit)
+		{
+			ProneRollElapsed = ProneRollDuration;
+		}
+		else
+		{
+			ProneRollElapsed += StepTime;
+		}
+	}
+	else
+	{
+		ProneRollElapsed += StepTime;
+	}
+
+	if (ProneRollElapsed >= ProneRollDuration - KINDA_SMALL_NUMBER)
+	{
+		FinishProneRoll();
+	}
+}
+
+void AIGIPlayerCharacter::FinishProneRoll()
+{
+	if (!bProneRolling)
+	{
+		return;
+	}
+
+	bProneRolling = false;
+	ProneRollElapsed = ProneRollDuration;
+	SetProneOrientation(ProneRollTargetOrientation);
+	ProneRollWorldDirection = FVector::ZeroVector;
+}
+
+void AIGIPlayerCharacter::SetProneOrientation(const EIGIProneOrientation NewOrientation)
+{
+	if (ProneOrientation == NewOrientation)
+	{
+		return;
+	}
+
+	const EIGIProneOrientation PreviousOrientation = ProneOrientation;
+	ProneOrientation = NewOrientation;
+	OnProneOrientationChanged.Broadcast(PreviousOrientation, ProneOrientation);
+}
+
 void AIGIPlayerCharacter::RefreshCameraPresentation(const float DeltaSeconds)
 {
 	if (!IsValid(CameraBoom) || !IsValid(FollowCamera))
@@ -725,19 +926,29 @@ FVector AIGIPlayerCharacter::GetTargetCameraOffset() const
 	{
 		switch (PlayerStance)
 		{
-			case EIGIPlayerStance::Crouching: return CrouchingAimCameraOffset;
-			case EIGIPlayerStance::Prone: return ProneAimCameraOffset;
+			case EIGIPlayerStance::Crouching:
+				return CrouchingAimCameraOffset;
+
+			case EIGIPlayerStance::Prone:
+				return IsProneSupine() ? ProneSupineAimCameraOffset : ProneAimCameraOffset;
+
 			case EIGIPlayerStance::Standing:
-			default: return StandingAimCameraOffset;
+			default:
+				return StandingAimCameraOffset;
 		}
 	}
 
 	switch (PlayerStance)
 	{
-		case EIGIPlayerStance::Crouching: return CrouchingCameraOffset;
-		case EIGIPlayerStance::Prone: return ProneCameraOffset;
+		case EIGIPlayerStance::Crouching:
+			return CrouchingCameraOffset;
+
+		case EIGIPlayerStance::Prone:
+			return IsProneSupine() ? ProneSupineCameraOffset : ProneCameraOffset;
+
 		case EIGIPlayerStance::Standing:
-		default: return StandingCameraOffset;
+		default:
+			return StandingCameraOffset;
 	}
 }
 
@@ -745,10 +956,20 @@ float AIGIPlayerCharacter::GetTargetCameraArmLength() const
 {
 	if (bAimInputHeld)
 	{
-		return IsProne() ? ProneAimCameraArmLength : AimCameraArmLength;
+		if (IsProne())
+		{
+			return IsProneSupine() ? ProneSupineAimCameraArmLength : ProneAimCameraArmLength;
+		}
+
+		return AimCameraArmLength;
 	}
 
-	return IsProne() ? ProneHipCameraArmLength : HipCameraArmLength;
+	if (IsProne())
+	{
+		return IsProneSupine() ? ProneSupineHipCameraArmLength : ProneHipCameraArmLength;
+	}
+
+	return HipCameraArmLength;
 }
 
 float AIGIPlayerCharacter::GetTargetCameraFieldOfView() const
@@ -758,7 +979,12 @@ float AIGIPlayerCharacter::GetTargetCameraFieldOfView() const
 		return HipFieldOfView;
 	}
 
-	return IsProne() ? ProneAimFieldOfView : AimFieldOfView;
+	if (IsProne())
+	{
+		return IsProneSupine() ? ProneSupineAimFieldOfView : ProneAimFieldOfView;
+	}
+
+	return AimFieldOfView;
 }
 
 void AIGIPlayerCharacter::RefreshAlsAnimationInstance()
