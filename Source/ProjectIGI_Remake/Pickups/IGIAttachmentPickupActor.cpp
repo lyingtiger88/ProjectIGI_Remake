@@ -114,6 +114,7 @@ UIGIWeaponAttachmentDataAsset* AIGIAttachmentPickupActor::CreatePrototypePistolS
 
     Data->AttachmentId = TEXT("Prototype.Pistol.Suppressor");
     Data->DisplayName = FText::FromString(TEXT("Pistol Suppressor"));
+    Data->Mesh = PrototypeSuppressorMesh;
     Data->AttachmentSlot = EIGIAttachmentSlot::Muzzle;
     Data->AttachmentType = EIGIAttachmentType::Suppressor;
     Data->CompatibleWeaponFamilies = {EIGIWeaponFamily::Pistol};
