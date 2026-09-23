@@ -24,7 +24,7 @@ ProjectIGI Remake is built with a hybrid Unreal Engine workflow:
 - INI configuration for engine/runtime settings
 - Materials and shaders for rendering systems
 
-Current gameplay foundations include ALS locomotion, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, suppressor-aware AI hearing, and movement/load acoustic signatures.
+Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/prone stance control with stance-aware aiming, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, suppressor-aware AI hearing, and movement/load acoustic signatures.
 
 ## Documentation
 
@@ -32,6 +32,7 @@ Current gameplay foundations include ALS locomotion, BDFR perception/tracking, a
 - [Build Guide](docs/BUILD.md)
 - [Weapons, Inventory & Attachments](docs/WEAPONS_INVENTORY_ATTACHMENTS.md)
 - [Glock 17 First Weapon Test](docs/GLOCK17_FIRST_WEAPON_TEST.md)
+- [Stance, Prone & Aiming](docs/STANCE_PRONE_AIM.md)
 - [Acoustic Stealth & AI Hearing](docs/ACOUSTIC_STEALTH.md)
 - [Footprint & Scent Tracking](docs/TRACKING_SCENT.md)
 - [Language & Technology Stack](docs/LANGUAGES.md)
