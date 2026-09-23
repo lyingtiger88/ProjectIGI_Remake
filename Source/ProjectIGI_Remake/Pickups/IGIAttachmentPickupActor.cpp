@@ -52,7 +52,9 @@ void AIGIAttachmentPickupActor::HandlePickupOverlap(
 bool AIGIAttachmentPickupActor::TryInstallOnActiveWeapon(AActor* OtherActor)
 {
     AIGIPlayerCharacter* Player = Cast<AIGIPlayerCharacter>(OtherActor);
-    if (!IsValid(Player) || !IsValid(AttachmentData))
+    UIGIWeaponAttachmentDataAsset* ResolvedAttachment = ResolveAttachmentData();
+
+    if (!IsValid(Player) || !IsValid(ResolvedAttachment))
     {
         return false;
     }
@@ -64,7 +66,7 @@ bool AIGIAttachmentPickupActor::TryInstallOnActiveWeapon(AActor* OtherActor)
         : nullptr;
 
     if (!IsValid(Attachments) ||
-        !Attachments->InstallAttachment(AttachmentData, bReplaceExistingAttachment))
+        !Attachments->InstallAttachment(ResolvedAttachment, bReplaceExistingAttachment))
     {
         return false;
     }
@@ -73,8 +75,55 @@ bool AIGIAttachmentPickupActor::TryInstallOnActiveWeapon(AActor* OtherActor)
         LogTemp,
         Log,
         TEXT("IGI installed attachment '%s' on '%s'."),
-        *AttachmentData->DisplayName.ToString(),
+        *ResolvedAttachment->DisplayName.ToString(),
         *ActiveWeapon->GetName());
 
     return true;
+}
+
+UIGIWeaponAttachmentDataAsset* AIGIAttachmentPickupActor::ResolveAttachmentData()
+{
+    if (IsValid(AttachmentData))
+    {
+        return AttachmentData;
+    }
+
+    if (IsValid(RuntimePrototypeAttachment))
+    {
+        return RuntimePrototypeAttachment;
+    }
+
+    if (bUsePrototypePistolSuppressor)
+    {
+        RuntimePrototypeAttachment = CreatePrototypePistolSuppressor();
+    }
+
+    return RuntimePrototypeAttachment;
+}
+
+UIGIWeaponAttachmentDataAsset* AIGIAttachmentPickupActor::CreatePrototypePistolSuppressor()
+{
+    UIGIWeaponAttachmentDataAsset* Data =
+        NewObject<UIGIWeaponAttachmentDataAsset>(this, TEXT("Runtime_PistolSuppressor_Data"));
+
+    if (!IsValid(Data))
+    {
+        return nullptr;
+    }
+
+    Data->AttachmentId = TEXT("Prototype.Pistol.Suppressor");
+    Data->DisplayName = FText::FromString(TEXT("Pistol Suppressor"));
+    Data->AttachmentSlot = EIGIAttachmentSlot::Muzzle;
+    Data->AttachmentType = EIGIAttachmentType::Suppressor;
+    Data->CompatibleWeaponFamilies = {EIGIWeaponFamily::Pistol};
+    Data->bUniversalWhenCompatibilityEmpty = false;
+    Data->RecoilMultiplier = 0.96f;
+    Data->SpreadMultiplier = 0.98f;
+    Data->GunshotNoiseMultiplier = 0.30f;
+    Data->MovementNoiseMultiplier = 1.02f;
+    Data->MuzzleFlashMultiplier = 0.20f;
+    Data->WeightKg = 0.24f;
+    Data->bSuppressesWeapon = true;
+
+    return Data;
 }
