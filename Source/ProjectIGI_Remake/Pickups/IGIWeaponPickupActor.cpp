@@ -18,6 +18,7 @@ AIGIWeaponPickupActor::AIGIWeaponPickupActor()
     SetRootComponent(PickupSphere);
     PickupSphere->InitSphereRadius(85.0f);
     PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    PickupSphere->SetGenerateOverlapEvents(true);
     PickupSphere->SetCollisionObjectType(ECC_WorldDynamic);
     PickupSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
     PickupSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
@@ -35,8 +36,29 @@ void AIGIWeaponPickupActor::BeginPlay()
 
     if (IsValid(PickupSphere))
     {
+        PickupSphere->SetGenerateOverlapEvents(true);
         PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::HandlePickupOverlap);
+        PickupSphere->UpdateOverlaps();
+
+        TArray<AActor*> OverlappingActors;
+        PickupSphere->GetOverlappingActors(OverlappingActors, AIGIPlayerCharacter::StaticClass());
+
+        for (AActor* Actor : OverlappingActors)
+        {
+            if (TryPickupByActor(Actor))
+            {
+                return;
+            }
+        }
     }
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("IGI Weapon Pickup ready: %s | Preset=%d | AutoEquip=%s"),
+        *GetName(),
+        static_cast<int32>(PrototypePreset),
+        bAutoEquip ? TEXT("true") : TEXT("false"));
 }
 
 void AIGIWeaponPickupActor::HandlePickupOverlap(
@@ -47,10 +69,18 @@ void AIGIWeaponPickupActor::HandlePickupOverlap(
     bool bFromSweep,
     const FHitResult& SweepResult)
 {
-    if (TryGiveWeaponTo(OtherActor))
+    TryPickupByActor(OtherActor);
+}
+
+bool AIGIWeaponPickupActor::TryPickupByActor(AActor* OtherActor)
+{
+    if (!TryGiveWeaponTo(OtherActor))
     {
-        Destroy();
+        return false;
     }
+
+    Destroy();
+    return true;
 }
 
 bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
@@ -58,9 +88,35 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
     AIGIPlayerCharacter* Player = Cast<AIGIPlayerCharacter>(OtherActor);
     UIGIWeaponDataAsset* ResolvedWeaponData = ResolveWeaponData();
 
-    if (!IsValid(Player) || !IsValid(ResolvedWeaponData) || !WeaponClass)
+    if (!IsValid(Player))
     {
+        UE_LOG(
+            LogTemp,
+            Verbose,
+            TEXT("IGI Weapon Pickup '%s' ignored overlap actor '%s' because it is not AIGIPlayerCharacter."),
+            *GetName(),
+            IsValid(OtherActor) ? *OtherActor->GetName() : TEXT("<invalid>"));
         return false;
+    }
+
+    if (!IsValid(ResolvedWeaponData))
+    {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("IGI Weapon Pickup '%s' has no valid WeaponData and no active prototype preset."),
+            *GetName());
+        return false;
+    }
+
+    if (!WeaponClass || WeaponClass->HasAnyClassFlags(CLASS_Abstract))
+    {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("IGI Weapon Pickup '%s' has an invalid/abstract WeaponClass. Falling back to AIGIFirearmBase."),
+            *GetName());
+        WeaponClass = AIGIFirearmBase::StaticClass();
     }
 
     UIGIInventoryComponent* Inventory = Player->GetInventoryComponent();
@@ -68,6 +124,11 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
 
     if (!IsValid(Inventory) || !IsValid(World))
     {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("IGI Weapon Pickup '%s' could not resolve player inventory or world."),
+            *GetName());
         return false;
     }
 
@@ -83,6 +144,12 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
 
     if (!IsValid(Weapon))
     {
+        UE_LOG(
+            LogTemp,
+            Error,
+            TEXT("IGI Weapon Pickup '%s' failed to spawn weapon class '%s'."),
+            *GetName(),
+            *GetNameSafe(WeaponClass.Get()));
         return false;
     }
 
@@ -91,6 +158,12 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
     EIGICarrySlot StoredSlot = EIGICarrySlot::Weapon01;
     if (!Inventory->TryStoreWeapon(Weapon, StoredSlot))
     {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("IGI Weapon Pickup '%s' could not store '%s'; no compatible/free carry slot."),
+            *GetName(),
+            *ResolvedWeaponData->DisplayName.ToString());
         Weapon->Destroy();
         return false;
     }
@@ -103,17 +176,32 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
             FMath::Max(InitialReserveAmmo, ResolvedWeaponData->MaxReserveAmmo));
     }
 
+    bool bEquipped = false;
+
     if (bAutoEquip)
     {
-        Inventory->EquipWeaponInSlot(StoredSlot);
+        bEquipped = Inventory->EquipWeaponInSlot(StoredSlot);
+
+        if (!bEquipped)
+        {
+            UE_LOG(
+                LogTemp,
+                Warning,
+                TEXT("IGI picked up '%s' but AutoEquip failed for slot %d."),
+                *ResolvedWeaponData->DisplayName.ToString(),
+                static_cast<int32>(StoredSlot));
+        }
     }
 
     UE_LOG(
         LogTemp,
         Log,
-        TEXT("IGI picked up weapon '%s' into slot %d."),
+        TEXT("IGI picked up weapon '%s' into slot %d. AutoEquip=%s Equipped=%s Visual=%s"),
         *ResolvedWeaponData->DisplayName.ToString(),
-        static_cast<int32>(StoredSlot));
+        static_cast<int32>(StoredSlot),
+        bAutoEquip ? TEXT("true") : TEXT("false"),
+        bEquipped ? TEXT("true") : TEXT("false"),
+        IsValid(Weapon->GetWeaponVisualComponent()) ? *Weapon->GetWeaponVisualComponent()->GetName() : TEXT("<none>"));
 
     return true;
 }
@@ -149,6 +237,12 @@ UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateGlock17PrototypeData()
     Data->WeaponId = EIGIWeaponId::Glock17;
     Data->DisplayName = FText::FromString(TEXT("Glock 17"));
     Data->WeaponMesh = PrototypeWeaponMesh;
+
+    if (PrototypeWeaponMesh.IsNull() && IsValid(PickupMesh) && IsValid(PickupMesh->GetStaticMesh()))
+    {
+        Data->WeaponStaticMesh = PickupMesh->GetStaticMesh();
+    }
+
     Data->WeaponFamily = EIGIWeaponFamily::Pistol;
     Data->HandlingProfile = EIGIHandlingProfile::Pistol;
     Data->CompatibleCarrySlots = {
