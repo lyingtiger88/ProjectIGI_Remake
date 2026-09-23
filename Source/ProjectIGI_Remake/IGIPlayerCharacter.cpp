@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Distraction/IGIDistractionThrowableActor.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -39,6 +40,7 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 	InventoryComponent = CreateDefaultSubobject<UIGIInventoryComponent>(TEXT("IGIInventory"));
 	HealthComponent = CreateDefaultSubobject<UIGIHealthComponent>(TEXT("IGIHealth"));
 	AcousticSignatureComponent = CreateDefaultSubobject<UIGIAcousticSignatureComponent>(TEXT("IGIAcousticSignature"));
+	DistractionThrowableClass = AIGIDistractionThrowableActor::StaticClass();
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
@@ -233,6 +235,7 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ThisClass::Input_OnEquipKnife);
 	PlayerInputComponent->BindKey(EKeys::Q, IE_Pressed, this, &ThisClass::Input_OnSwitchShoulder);
 	PlayerInputComponent->BindKey(EKeys::H, IE_Pressed, this, &ThisClass::Input_OnUseMedKit);
+	PlayerInputComponent->BindKey(EKeys::T, IE_Pressed, this, &ThisClass::Input_OnThrowDistraction);
 
 	// Temporary source-only prone roll controls until dedicated Enhanced Input assets are authored.
 	PlayerInputComponent->BindKey(EKeys::Z, IE_Pressed, this, &ThisClass::Input_OnProneRollLeft);
@@ -753,6 +756,86 @@ void AIGIPlayerCharacter::Input_OnProneRollRight()
 void AIGIPlayerCharacter::Input_OnUseMedKit()
 {
 	UseMedKit();
+}
+
+void AIGIPlayerCharacter::Input_OnThrowDistraction()
+{
+	ThrowDistractionObject();
+}
+
+bool AIGIPlayerCharacter::ThrowDistractionObject()
+{
+	if (bProneRolling ||
+		!IsValid(InventoryComponent) ||
+		InventoryComponent->GetEquipmentCount(EIGIEquipmentType::DistractionObject) <= 0 ||
+		!DistractionThrowableClass)
+	{
+		return false;
+	}
+
+	AController* PlayerController = GetController();
+	UWorld* World = GetWorld();
+
+	if (!IsValid(PlayerController) || !IsValid(World))
+	{
+		return false;
+	}
+
+	FVector ViewLocation;
+	FRotator ViewRotation;
+	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	const FVector Forward = ViewRotation.Vector();
+	const FVector Right = FRotationMatrix(ViewRotation).GetUnitAxis(EAxis::Y);
+	const FVector SpawnLocation =
+		ViewLocation + Forward * 75.0f + Right * 12.0f - FVector::UpVector * 12.0f;
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.Instigator = this;
+	SpawnParameters.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AIGIDistractionThrowableActor* Throwable =
+		World->SpawnActor<AIGIDistractionThrowableActor>(
+			DistractionThrowableClass,
+			SpawnLocation,
+			ViewRotation,
+			SpawnParameters);
+
+	if (!IsValid(Throwable))
+	{
+		return false;
+	}
+
+	UStaticMesh* ThrowableMesh = DistractionThrowableMesh.IsNull()
+		? nullptr
+		: DistractionThrowableMesh.LoadSynchronous();
+
+	const FVector InitialVelocity =
+		Forward * DistractionThrowSpeed +
+		FVector::UpVector * DistractionThrowUpwardSpeed;
+
+	Throwable->InitializeThrow(
+		this,
+		InitialVelocity,
+		ThrowableMesh);
+
+	if (InventoryComponent->ConsumeEquipment(
+			EIGIEquipmentType::DistractionObject,
+			1) != 1)
+	{
+		Throwable->Destroy();
+		return false;
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("IGI threw distraction object. Remaining=%d"),
+		InventoryComponent->GetEquipmentCount(EIGIEquipmentType::DistractionObject));
+
+	return true;
 }
 
 bool AIGIPlayerCharacter::UseMedKit()
