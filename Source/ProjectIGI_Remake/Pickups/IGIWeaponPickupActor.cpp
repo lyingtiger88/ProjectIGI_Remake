@@ -275,6 +275,9 @@ UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateGlock17PrototypeData()
     Data->ReloadNoiseLoudness = 0.14f;
     Data->ReloadNoiseRadius = 800.0f;
     Data->BaseMuzzleFlashScale = 1.0f;
+    Data->MuzzleFlashEffect = PrototypeMuzzleFlashEffect;
+    Data->MuzzleSmokeEffect = PrototypeMuzzleSmokeEffect;
+    Data->ShellCasingMesh = PrototypeCasingMesh;
 
     return Data;
 }
