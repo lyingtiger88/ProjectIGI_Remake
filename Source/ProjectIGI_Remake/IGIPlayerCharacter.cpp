@@ -14,6 +14,7 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "IndirectVisual/BDFRIndirectVisualSourceComponent.h"
+#include "Tracking/BDFRTrackEmitterComponent.h"
 #include "Math/RotationMatrix.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
@@ -37,6 +38,8 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 
 	IndirectVisualSourceComponent =
 		CreateDefaultSubobject<UBDFRIndirectVisualSourceComponent>(TEXT("BDFRIndirectVisualSource"));
+	TrackEmitterComponent =
+		CreateDefaultSubobject<UBDFRTrackEmitterComponent>(TEXT("BDFRTrackEmitter"));
 
 	static ConstructorHelpers::FObjectFinder<UAlsCharacterSettings> CharacterSettingsAsset(
 		TEXT("/ALS/ALS/Data/Character/CS_Als_Default.CS_Als_Default"));
