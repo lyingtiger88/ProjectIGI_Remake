@@ -5,6 +5,7 @@
 #include "IGIWeaponPickupActor.generated.h"
 
 class AIGIWeaponBase;
+class UPrimitiveComponent;
 class USphereComponent;
 class UStaticMeshComponent;
 class UIGIWeaponDataAsset;
