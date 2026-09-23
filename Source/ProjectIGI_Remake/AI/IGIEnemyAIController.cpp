@@ -57,6 +57,13 @@ void AIGIEnemyAIController::BeginPlay()
 	OnAcousticEventPerceived.AddDynamic(
 		this,
 		&ThisClass::HandleAcousticEventPerceived);
+
+	if (IsValid(GetAwarenessComponent()))
+	{
+		GetAwarenessComponent()->OnAwarenessChanged.AddDynamic(
+			this,
+			&ThisClass::HandleAwarenessChanged);
+	}
 }
 
 bool AIGIEnemyAIController::BDFR_ShouldProcessPerceivedActor_Implementation(
@@ -240,8 +247,21 @@ void AIGIEnemyAIController::AcceptDistraction(
 		*Location.ToCompactString());
 }
 
+void AIGIEnemyAIController::HandleAwarenessChanged(
+	AActor* TargetActor,
+	const float Awareness,
+	const EBDFRAwarenessLevel AwarenessLevel)
+{
+	if (AwarenessLevel >= EBDFRAwarenessLevel::Alerted)
+	{
+		ClearDistraction();
+	}
+}
+
 void AIGIEnemyAIController::ClearDistraction()
 {
+	const bool bWasActive = bHasActiveDistraction;
+
 	bHasActiveDistraction = false;
 	ActiveDistractionSource = nullptr;
 	ActiveDistractionLocation = FVector::ZeroVector;
@@ -250,6 +270,11 @@ void AIGIEnemyAIController::ClearDistraction()
 	if (UWorld* World = GetWorld(); IsValid(World))
 	{
 		World->GetTimerManager().ClearTimer(ClearDistractionTimer);
+	}
+
+	if (bWasActive && bAutoMoveToAcceptedDistraction)
+	{
+		StopMovement();
 	}
 }
 
