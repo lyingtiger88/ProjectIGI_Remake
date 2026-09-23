@@ -31,6 +31,7 @@ Current gameplay foundations include ALS locomotion, BDFR perception/tracking, a
 - [Architecture](docs/ARCHITECTURE.md)
 - [Build Guide](docs/BUILD.md)
 - [Weapons, Inventory & Attachments](docs/WEAPONS_INVENTORY_ATTACHMENTS.md)
+- [Glock 17 First Weapon Test](docs/GLOCK17_FIRST_WEAPON_TEST.md)
 - [Acoustic Stealth & AI Hearing](docs/ACOUSTIC_STEALTH.md)
 - [Footprint & Scent Tracking](docs/TRACKING_SCENT.md)
 - [Language & Technology Stack](docs/LANGUAGES.md)

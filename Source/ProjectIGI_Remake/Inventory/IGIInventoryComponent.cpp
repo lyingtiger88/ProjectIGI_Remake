@@ -115,9 +115,14 @@ bool UIGIInventoryComponent::EquipWeaponInSlot(const EIGICarrySlot Slot)
     }
 
     const UIGIWeaponDataAsset* Data = Weapon->GetWeaponData();
-    const FName EquipSocket = IsValid(Data) && !Data->EquippedSocket.IsNone()
+    FName EquipSocket = IsValid(Data) && !Data->EquippedSocket.IsNone()
         ? Data->EquippedSocket
         : FName(TEXT("SCK_Weapon_Hand_R"));
+
+    if (!Character->GetMesh()->DoesSocketExist(EquipSocket))
+    {
+        EquipSocket = TEXT("hand_r");
+    }
 
     Weapon->EquipTo(Character, Character->GetMesh(), EquipSocket);
 
@@ -431,5 +436,28 @@ void UIGIInventoryComponent::AttachStoredWeapon(
         return;
     }
 
-    Weapon->HolsterTo(Character, Character->GetMesh(), GetSocketNameForSlot(Slot));
+    FName HolsterSocket = GetSocketNameForSlot(Slot);
+
+    if (!Character->GetMesh()->DoesSocketExist(HolsterSocket))
+    {
+        switch (Slot)
+        {
+            case EIGICarrySlot::Weapon03:
+                HolsterSocket = TEXT("thigh_r");
+                break;
+
+            case EIGICarrySlot::Knife:
+                HolsterSocket = TEXT("thigh_l");
+                break;
+
+            case EIGICarrySlot::Weapon01:
+            case EIGICarrySlot::Weapon02:
+            case EIGICarrySlot::Weapon04:
+            default:
+                HolsterSocket = TEXT("spine_03");
+                break;
+        }
+    }
+
+    Weapon->HolsterTo(Character, Character->GetMesh(), HolsterSocket);
 }

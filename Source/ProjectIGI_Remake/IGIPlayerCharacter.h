@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AlsCharacter.h"
+#include "Weapons/IGIWeaponTypes.h"
 #include "IGIPlayerCharacter.generated.h"
 
 class APlayerController;
@@ -105,8 +106,16 @@ protected:
 	void Input_OnCrouch();
 	void Input_OnJump(const FInputActionValue& ActionValue);
 	void Input_OnAim(const FInputActionValue& ActionValue);
+	void Input_OnFire();
+	void Input_OnReload();
+	void Input_OnEquipWeapon01();
+	void Input_OnEquipWeapon02();
+	void Input_OnEquipWeapon03();
+	void Input_OnEquipWeapon04();
+	void Input_OnEquipKnife();
 
 private:
+	void EquipInventorySlot(EIGICarrySlot Slot);
 	void RefreshAlsAnimationInstance();
 	void RefreshInputMappingContext();
 	void RemoveInputMappingContext(APlayerController* PlayerController) const;
