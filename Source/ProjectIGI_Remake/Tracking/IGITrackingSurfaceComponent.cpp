@@ -2,7 +2,7 @@
 
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
-#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Kismet/GameplayStatics.h"
 #include "Tracking/BDFRTrackEmitterComponent.h"
 
 UIGITrackingSurfaceComponent::UIGITrackingSurfaceComponent()
@@ -65,11 +65,7 @@ void UIGITrackingSurfaceComponent::RefreshTrackingSurface()
 		return;
 	}
 
-	const UPhysicalMaterial* PhysicalMaterial = Hit.PhysMaterial.Get();
-	const EPhysicalSurface PhysicalSurface = IsValid(PhysicalMaterial)
-		? UPhysicalMaterial::DetermineSurfaceType(PhysicalMaterial)
-		: SurfaceType_Default;
-
+	const EPhysicalSurface PhysicalSurface = UGameplayStatics::GetSurfaceType(Hit);
 	CurrentSurface = ConvertPhysicalSurface(PhysicalSurface);
 	TrackEmitter->SetSurfaceType(CurrentSurface);
 }
