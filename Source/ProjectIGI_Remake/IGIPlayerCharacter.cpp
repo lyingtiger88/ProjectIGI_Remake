@@ -306,7 +306,10 @@ float AIGIPlayerCharacter::GetProneAimPitchAngle() const
 		return 0.0f;
 	}
 
-	return FMath::ClampAngle(GetController()->GetControlRotation().Pitch, -89.0f, 89.0f);
+	return FMath::Clamp(
+		FRotator::NormalizeAxis(GetController()->GetControlRotation().Pitch),
+		-89.0f,
+		89.0f);
 }
 
 bool AIGIPlayerCharacter::StartProneRoll(const EIGIProneRollDirection Direction)
