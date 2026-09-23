@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "IGIPlayerCharacter.h"
 #include "TimerManager.h"
+#include "Vision/IGIThermalSignatureComponent.h"
 
 AIGIEnemyAIController::AIGIEnemyAIController()
 {
@@ -63,6 +64,26 @@ void AIGIEnemyAIController::BeginPlay()
 		GetAwarenessComponent()->OnAwarenessChanged.AddDynamic(
 			this,
 			&ThisClass::HandleAwarenessChanged);
+	}
+}
+
+void AIGIEnemyAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (!IsValid(InPawn) ||
+		IsValid(InPawn->FindComponentByClass<UIGIThermalSignatureComponent>()))
+	{
+		return;
+	}
+
+	UIGIThermalSignatureComponent* ThermalSignature =
+		NewObject<UIGIThermalSignatureComponent>(InPawn, TEXT("IGIThermalSignature"));
+
+	if (IsValid(ThermalSignature))
+	{
+		InPawn->AddInstanceComponent(ThermalSignature);
+		ThermalSignature->RegisterComponent();
 	}
 }
 

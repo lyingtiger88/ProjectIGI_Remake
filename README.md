@@ -24,7 +24,7 @@ ProjectIGI Remake is built with a hybrid Unreal Engine workflow:
 - INI configuration for engine/runtime settings
 - Materials and shaders for rendering systems
 
-Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/prone stance control with prone rolling, supine/on-back aiming, and stance-aware camera behavior, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, muzzle flash/smoke, weather-aware shell casings, exact NPC ammo loot, health/Med Kit gameplay, difficulty-aware throwable distractions, suppressor-aware AI hearing, and movement/load acoustic signatures.
+Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/prone stance control with prone rolling, supine/on-back aiming, and stance-aware camera behavior, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, muzzle flash/smoke, weather-aware shell casings, exact NPC ammo loot, health/Med Kit gameplay, difficulty-aware throwable distractions, binocular/NVG/thermal optics, suppressor-aware AI hearing, and movement/load acoustic signatures.
 
 ## Documentation
 
@@ -35,6 +35,7 @@ Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/
 - [Flare Gun](docs/FLARE_GUN.md)
 - [Med Kit & Health](docs/MED_KIT.md)
 - [Distraction System](docs/DISTRACTION_SYSTEM.md)
+- [Binoculars, Night Vision & Thermal](docs/OPTICAL_VISION.md)
 - [Glock 17 First Weapon Test](docs/GLOCK17_FIRST_WEAPON_TEST.md)
 - [Stance, Prone & Aiming](docs/STANCE_PRONE_AIM.md)
 - [Acoustic Stealth & AI Hearing](docs/ACOUSTIC_STEALTH.md)

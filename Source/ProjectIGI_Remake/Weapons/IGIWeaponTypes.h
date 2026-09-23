@@ -152,7 +152,10 @@ enum class EIGIEquipmentType : uint8
     ProximityMine,
     Claymore,
     MedKit,
-    DistractionObject
+    DistractionObject,
+    Binoculars,
+    NightVisionGoggles,
+    ThermalViewer
 };
 
 UENUM(BlueprintType)

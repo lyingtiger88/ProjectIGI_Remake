@@ -44,6 +44,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 	virtual bool BDFR_ShouldProcessPerceivedActor_Implementation(AActor* SourceActor) const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Distraction")

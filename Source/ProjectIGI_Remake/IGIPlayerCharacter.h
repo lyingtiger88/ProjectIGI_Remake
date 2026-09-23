@@ -16,6 +16,7 @@ class UIGICombatComponent;
 class UIGIHealthComponent;
 class UIGIInventoryComponent;
 class UIGITrackingSurfaceComponent;
+class UIGIVisionComponent;
 class UInputAction;
 class UInputMappingContext;
 class USpringArmComponent;
@@ -82,6 +83,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "IGI|Distraction")
 	bool ThrowDistractionObject();
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Vision")
+	UIGIVisionComponent* GetVisionComponent() const { return VisionComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "IGI|Stealth")
 	UIGIAcousticSignatureComponent* GetAcousticSignatureComponent() const { return AcousticSignatureComponent; }
@@ -176,6 +180,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Distraction", meta = (ClampMin = "0.0", ForceUnits = "cm/s"))
 	float DistractionThrowUpwardSpeed = 130.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Vision")
+	TObjectPtr<UIGIVisionComponent> VisionComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Vision|Loadout")
+	bool bStartWithBinoculars = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Vision|Loadout")
+	bool bStartWithNightVisionGoggles = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Vision|Loadout")
+	bool bStartWithThermalViewer = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Stealth")
 	TObjectPtr<UIGIAcousticSignatureComponent> AcousticSignatureComponent;
@@ -307,6 +323,11 @@ protected:
 	void Input_OnProneRollRight();
 	void Input_OnUseMedKit();
 	void Input_OnThrowDistraction();
+	void Input_OnToggleBinoculars();
+	void Input_OnToggleNightVision();
+	void Input_OnToggleThermal();
+	void Input_OnVisionZoomIn();
+	void Input_OnVisionZoomOut();
 
 private:
 	UPROPERTY(Transient)
