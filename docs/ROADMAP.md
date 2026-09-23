@@ -44,7 +44,8 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] ADS camera/weapon alignment
 - [ ] recoil application
 - [ ] spread application
-- [ ] hitscan/projectile implementation
+- [ ] complete hitscan/projectile implementation
+- [x] flare-gun projectile foundation
 - [ ] impact feedback
 - [x] Niagara muzzle flash presentation foundation
 - [x] muzzle smoke presentation foundation
@@ -102,6 +103,7 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [x] inventory/equipment foundation
 - [x] exact remaining NPC/enemy ammunition loot foundation
 - [ ] smoke air-support / rescue mission hooks
+- [x] flare air-support / rescue signal hook foundation
 - [ ] C4 / Claymore placement and detonation behavior
 - [ ] checkpoints/save data
 - [ ] UI/HUD
