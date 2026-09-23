@@ -29,6 +29,17 @@ void AIGIMedKitPickupActor::BeginPlay()
 
     PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::HandlePickupOverlap);
     PickupSphere->UpdateOverlaps();
+
+    TArray<AActor*> OverlappingActors;
+    PickupSphere->GetOverlappingActors(OverlappingActors);
+
+    for (AActor* Actor : OverlappingActors)
+    {
+        if (TryPickupByActor(Actor) && IsActorBeingDestroyed())
+        {
+            return;
+        }
+    }
 }
 
 void AIGIMedKitPickupActor::HandlePickupOverlap(
@@ -57,22 +68,31 @@ bool AIGIMedKitPickupActor::TryPickupByActor(AActor* OtherActor)
         return false;
     }
 
+    MedKitCount = FMath::Max(1, MedKitCount);
+
     const int32 Added = Inventory->AddEquipment(
         EIGIEquipmentType::MedKit,
-        FMath::Max(1, MedKitCount));
+        MedKitCount);
 
     if (Added <= 0)
     {
         return false;
     }
 
+    MedKitCount -= Added;
+
     UE_LOG(
         LogTemp,
         Log,
-        TEXT("IGI picked up %d Med Kit(s). Total=%d"),
+        TEXT("IGI picked up %d Med Kit(s). Total=%d PickupRemaining=%d"),
         Added,
-        Inventory->GetEquipmentCount(EIGIEquipmentType::MedKit));
+        Inventory->GetEquipmentCount(EIGIEquipmentType::MedKit),
+        MedKitCount);
 
-    Destroy();
+    if (MedKitCount <= 0)
+    {
+        Destroy();
+    }
+
     return true;
 }
