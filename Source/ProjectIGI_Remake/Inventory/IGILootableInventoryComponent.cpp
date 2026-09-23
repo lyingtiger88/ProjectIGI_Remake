@@ -36,6 +36,7 @@ int32 UIGILootableInventoryComponent::LootAllRemainingAmmunitionToInventory(
         return 0;
     }
 
+    const int32 BeforeTotal = GetTotalRemainingRounds(bIncludeLoadedMagazines);
     int32 TotalTransferred = 0;
 
     const TArray<FName> AmmoTypes = SourceInventory->GetAmmoTypes();
@@ -48,6 +49,15 @@ int32 UIGILootableInventoryComponent::LootAllRemainingAmmunitionToInventory(
 
     if (!bIncludeLoadedMagazines)
     {
+        UE_LOG(
+            LogTemp,
+            Log,
+            TEXT("IGI loot ammo: source=%s before=%d transferred=%d remaining=%d"),
+            *GetNameSafe(GetOwner()),
+            BeforeTotal,
+            TotalTransferred,
+            GetTotalRemainingRounds(false));
+
         return TotalTransferred;
     }
 
@@ -90,6 +100,15 @@ int32 UIGILootableInventoryComponent::LootAllRemainingAmmunitionToInventory(
             TotalTransferred += Accepted;
         }
     }
+
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("IGI loot ammo: source=%s before=%d transferred=%d remaining=%d"),
+        *GetNameSafe(GetOwner()),
+        BeforeTotal,
+        TotalTransferred,
+        GetTotalRemainingRounds(true));
 
     return TotalTransferred;
 }
