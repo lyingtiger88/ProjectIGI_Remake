@@ -46,6 +46,7 @@ BDFR.Acoustic.Movement.ProneRoll
 BDFR.Acoustic.Weapon.Equip
 BDFR.Acoustic.Weapon.Reload
 BDFR.Acoustic.Weapon.Attachment
+BDFR.Acoustic.Weapon.CasingImpact
 
 BDFR.Acoustic.Gunshot
 BDFR.Acoustic.Gunshot.Suppressed
@@ -143,3 +144,10 @@ Automatic footsteps can later be disabled in favor of precise animation-notify-d
 
 Prone left/right rolls emit `BDFR.Acoustic.Movement.ProneRoll`. The event is intentionally modest,
 but its range/loudness still scales with the player's current carried-load multiplier.
+
+
+## Shell casing impacts
+
+Physical shell casings can create a small `BDFR.Acoustic.Weapon.CasingImpact` event on meaningful
+environment hits. Metal and concrete are louder; soft surfaces and wet/snowy weather muffle the
+signature. Only the first few impacts are reported to avoid noisy AI stimulus spam.
