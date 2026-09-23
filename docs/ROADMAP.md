@@ -9,6 +9,12 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [x] Enhanced Input
 - [x] third-person camera
 - [x] basic gait / stance / aim hooks
+- [x] tap crouch / hold prone stance transitions
+- [x] prone collision and overhead-clearance checks
+- [x] stance-preserving aim behavior
+- [x] stance-aware shoulder camera and FOV transitions
+- [x] prone movement/noise gameplay behavior
+- [ ] dedicated prone animation set and animation layer
 - [ ] final player Blueprint/content wiring
 - [ ] locomotion regression test map
 
