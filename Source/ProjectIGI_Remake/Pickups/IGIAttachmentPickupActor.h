@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "IGIAttachmentPickupActor.generated.h"
 
+class UPrimitiveComponent;
 class USphereComponent;
 class UStaticMeshComponent;
 class UIGIWeaponAttachmentDataAsset;
