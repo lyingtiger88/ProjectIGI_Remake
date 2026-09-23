@@ -177,6 +177,21 @@ the actual rounds still loaded in magazines. It never generates random death-tim
 
 If the recipient is at carry capacity, unaccepted rounds remain on the source actor.
 
+### Difficulty-aware distraction
+
+Thrown distraction objects report semantic BDFR acoustic events with the thrown object as the
+stimulus source rather than the player.
+
+`AIGIEnemyAIController` consumes those events as temporary investigation goals. Its response model
+uses BDFR difficulty, acoustic strength, distance, current awareness, and repeat-use memory.
+
+Difficulty tiers 3-5 require stronger/closer lures, have lower response probability, accumulate larger
+repeat penalties, and ignore diversion attempts once Alerted. Confirmed threats always override and
+cancel an active distraction.
+
+The prototype controller can move directly to an accepted lure; production Behavior Trees can consume
+the same exposed distraction state/event instead.
+
 ### Acoustic stealth
 
 `UIGIAcousticSignatureComponent` combines movement and loadout into a BDFR hearing signature.

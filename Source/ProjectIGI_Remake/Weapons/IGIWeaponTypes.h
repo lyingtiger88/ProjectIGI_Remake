@@ -151,7 +151,8 @@ enum class EIGIEquipmentType : uint8
     C4,
     ProximityMine,
     Claymore,
-    MedKit
+    MedKit,
+    DistractionObject
 };
 
 UENUM(BlueprintType)
