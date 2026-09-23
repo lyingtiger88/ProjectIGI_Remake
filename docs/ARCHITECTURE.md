@@ -31,6 +31,34 @@ AIGIPlayerCharacter
 └── UIGITrackingSurfaceComponent
 ```
 
+### Tactical stance layer
+
+ProjectIGI owns a three-state stance layer above ALS:
+
+```text
+Standing
+Crouching
+Prone
+```
+
+ALS remains responsible for standing/crouching locomotion. Prone is represented by `EIGIPlayerStance::Prone`; while prone, ALS stays in its crouched state so its movement and aiming pipeline remains active.
+
+The player character owns:
+
+- tap-crouch standing/crouch transitions,
+- hold-crouch prone entry,
+- prone collision height,
+- clearance checks before standing up,
+- stance-aware camera offsets and FOV,
+- right/left shoulder camera switching,
+- slower camera-relative prone movement,
+- aiming without forcing a stance change,
+- Blueprint-facing prone animation state.
+
+Dedicated prone animation assets remain project-owned presentation content rather than an ALS plugin modification.
+
+See [STANCE_PRONE_AIM.md](STANCE_PRONE_AIM.md).
+
 ### Combat coordinator
 
 `UIGICombatComponent` owns high-level combat state:
