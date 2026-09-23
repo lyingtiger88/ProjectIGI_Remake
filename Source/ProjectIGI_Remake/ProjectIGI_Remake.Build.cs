@@ -15,7 +15,10 @@ public class ProjectIGI_Remake : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"GameplayTags",
-			"ALS"
+			"PhysicsCore",
+			"AIModule",
+			"ALS",
+			"BDFR_InteractiveAI"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
