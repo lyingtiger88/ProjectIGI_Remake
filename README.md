@@ -11,6 +11,10 @@
   <img alt="Platform" src="https://img.shields.io/badge/Platform-Windows%20x64-0078D6?logo=windows">
 </p>
 
+## Languages / زبان‌ها / اللغات / Языки
+
+[English](README.md) | [فارسی](README_FA.md) | [العربية](README_AR.md) | [Русский](README_RU.md)
+
 > See [docs/LANGUAGES.md](docs/LANGUAGES.md) for the complete language and technology stack documentation.
 
 ProjectIGI Remake is built with a hybrid Unreal Engine workflow:
