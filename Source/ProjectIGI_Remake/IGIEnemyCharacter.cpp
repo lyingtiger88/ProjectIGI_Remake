@@ -7,6 +7,8 @@
 #include "AlsAnimationInstance.h"
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Captivity/BDFRCaptivityComponent.h"
+#include "Captivity/BDFRInterrogationComponent.h"
 #include "Core/BDFRGameplayTags.h"
 #include "Engine/SkeletalMesh.h"
 #include "Health/BDFRHealthComponent.h"
@@ -25,6 +27,8 @@ AIGIEnemyCharacter::AIGIEnemyCharacter()
 	DistressComponent = CreateDefaultSubobject<UBDFRDistressComponent>(TEXT("BDFRDistress"));
 	InjuryResponseComponent = CreateDefaultSubobject<UBDFRInjuryResponseComponent>(TEXT("BDFRInjuryResponse"));
 	AcousticExposureComponent = CreateDefaultSubobject<UBDFRAcousticExposureComponent>(TEXT("BDFRAcousticExposure"));
+	CaptivityComponent = CreateDefaultSubobject<UBDFRCaptivityComponent>(TEXT("BDFRCaptivity"));
+	InterrogationComponent = CreateDefaultSubobject<UBDFRInterrogationComponent>(TEXT("BDFRInterrogation"));
 
 	static ConstructorHelpers::FObjectFinder<UAlsCharacterSettings> CharacterSettingsAsset(
 		TEXT("/ALS/ALS/Data/Character/CS_Als_Default.CS_Als_Default"));
