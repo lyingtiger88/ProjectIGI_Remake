@@ -3,6 +3,7 @@
 #include "IGIEnemyAIController.h"
 
 #include "AIController.h"
+#include "Acoustics/BDFRAcousticExposureComponent.h"
 #include "AlsAnimationInstance.h"
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -23,6 +24,7 @@ AIGIEnemyCharacter::AIGIEnemyCharacter()
 	HealthComponent = CreateDefaultSubobject<UBDFRHealthComponent>(TEXT("BDFRHealth"));
 	DistressComponent = CreateDefaultSubobject<UBDFRDistressComponent>(TEXT("BDFRDistress"));
 	InjuryResponseComponent = CreateDefaultSubobject<UBDFRInjuryResponseComponent>(TEXT("BDFRInjuryResponse"));
+	AcousticExposureComponent = CreateDefaultSubobject<UBDFRAcousticExposureComponent>(TEXT("BDFRAcousticExposure"));
 
 	static ConstructorHelpers::FObjectFinder<UAlsCharacterSettings> CharacterSettingsAsset(
 		TEXT("/ALS/ALS/Data/Character/CS_Als_Default.CS_Als_Default"));
