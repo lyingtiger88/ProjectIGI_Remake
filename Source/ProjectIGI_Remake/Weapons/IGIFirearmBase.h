@@ -47,7 +47,7 @@ public:
     bool NotifyShotFired();
 
     UFUNCTION(BlueprintCallable, Category = "IGI|Weapon")
-    bool FireHitscan(AController* InstigatorController);
+    virtual bool FireHitscan(AController* InstigatorController);
 
     UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
     FVector GetLastShotImpactLocation() const { return LastShotImpactLocation; }

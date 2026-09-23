@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Weapons/IGIWeaponTypes.h"
 #include "IGIWeaponPickupActor.generated.h"
 
 class AIGIWeaponBase;
@@ -17,7 +18,8 @@ UENUM(BlueprintType)
 enum class EIGIPrototypeWeaponPreset : uint8
 {
     None,
-    Glock17
+    Glock17,
+    FlareGun
 };
 
 UCLASS(Blueprintable, BlueprintType, meta = (DisplayName = "IGI Weapon Pickup"))
@@ -63,6 +65,15 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Shot FX")
     TSoftObjectPtr<UStaticMesh> PrototypeCasingMesh;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Flare")
+    TSoftObjectPtr<UStaticMesh> PrototypeFlareProjectileMesh;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Flare")
+    TSoftObjectPtr<UNiagaraSystem> PrototypeFlareTrailEffect;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Flare")
+    EIGIFlarePurpose PrototypeFlarePurpose = EIGIFlarePurpose::Illumination;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup")
     bool bAutoEquip = true;
 
@@ -85,4 +96,5 @@ private:
     bool TryGiveWeaponTo(AActor* OtherActor);
     UIGIWeaponDataAsset* ResolveWeaponData();
     UIGIWeaponDataAsset* CreateGlock17PrototypeData();
+    UIGIWeaponDataAsset* CreateFlareGunPrototypeData();
 };

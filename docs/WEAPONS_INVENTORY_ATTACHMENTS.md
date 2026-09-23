@@ -38,6 +38,7 @@ A weapon Data Asset defines the body slots it is allowed to use through `Compati
 | Sniper rifles | SVD Dragunov, PSG-1, PSG-1SD, M82A1, M82A1-T |
 | Shotguns | SPAS-12, M1014, Jackhammer |
 | Heavy | LAW 80, RPG-7, FN Minimi, M2HB |
+| Signal weapon | Flare Gun |
 | Grenades | Smoke Grenade, Flashbang, L2A2 Hand Grenade |
 | Deployables | Proximity Mine, Claymore, C4 |
 
@@ -175,3 +176,15 @@ For each weapon:
 5. Set weight and acoustic values.
 6. Add the required carry and attachment sockets to the relevant skeletal meshes.
 7. Create attachment Data Assets only for combinations the real/gameplay weapon should support.
+
+
+## Flare gun
+
+The flare gun is a specialized one-shot firearm using `AIGIFlareGunBase` and
+`AIGIFlareProjectileActor`.
+
+It uses the normal inventory/ammo model but launches a physical, wind-affected flare instead of a
+hitscan shot. Flare purposes include illumination, air-support marking, and rescue/extraction
+signaling.
+
+See [FLARE_GUN.md](FLARE_GUN.md).

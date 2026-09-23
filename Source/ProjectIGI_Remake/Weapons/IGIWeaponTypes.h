@@ -38,6 +38,7 @@ enum class EIGIWeaponId : uint8
     RPG7,
     FNMinimi,
     M2HB,
+    FlareGun,
     SmokeGrenade,
     Flashbang,
     L2A2HandGrenade,
@@ -156,6 +157,14 @@ UENUM(BlueprintType)
 enum class EIGISmokePurpose : uint8
 {
     Tactical,
+    AirSupportMarker,
+    RescueExtraction
+};
+
+UENUM(BlueprintType)
+enum class EIGIFlarePurpose : uint8
+{
+    Illumination,
     AirSupportMarker,
     RescueExtraction
 };
