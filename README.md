@@ -32,6 +32,7 @@ Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/
 - [Build Guide](docs/BUILD.md)
 - [Weapons, Inventory & Attachments](docs/WEAPONS_INVENTORY_ATTACHMENTS.md)
 - [Weapon FX, Weather Casings & Exact Ammo Loot](docs/WEAPON_FX_WEATHER_LOOT.md)
+- [Flare Gun](docs/FLARE_GUN.md)
 - [Glock 17 First Weapon Test](docs/GLOCK17_FIRST_WEAPON_TEST.md)
 - [Stance, Prone & Aiming](docs/STANCE_PRONE_AIM.md)
 - [Acoustic Stealth & AI Hearing](docs/ACOUSTIC_STEALTH.md)
