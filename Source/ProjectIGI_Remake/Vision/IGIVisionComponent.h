@@ -46,6 +46,12 @@ public:
     bool AdjustBinocularZoom(float FovDeltaDegrees);
 
     UFUNCTION(BlueprintCallable, Category = "IGI|Vision")
+    bool ZoomBinocularsIn();
+
+    UFUNCTION(BlueprintCallable, Category = "IGI|Vision")
+    bool ZoomBinocularsOut();
+
+    UFUNCTION(BlueprintCallable, Category = "IGI|Vision")
     void DisableVision();
 
     UFUNCTION(BlueprintPure, Category = "IGI|Vision")
