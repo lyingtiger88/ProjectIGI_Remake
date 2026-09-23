@@ -3,7 +3,9 @@
 #include "CoreMinimal.h"
 #include "AI/IGIDistractionTypes.h"
 #include "Behavior/BDFRAIController.h"
+#include "Core/BDFRAITypes.h"
 #include "Difficulty/BDFRDifficultyTypes.h"
+#include "TimerManager.h"
 #include "IGIEnemyAIController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(
@@ -96,6 +98,12 @@ private:
 		FName AcousticTag,
 		FVector Location,
 		float EffectiveStrength);
+
+	UFUNCTION()
+	void HandleAwarenessChanged(
+		AActor* TargetActor,
+		float Awareness,
+		EBDFRAwarenessLevel AwarenessLevel);
 
 	bool ShouldAcceptDistraction(
 		const FVector& Location,
