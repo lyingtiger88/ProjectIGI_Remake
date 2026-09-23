@@ -17,7 +17,7 @@ public:
     void SetWeatherState(const FIGIWeatherState& NewWeatherState);
 
     UFUNCTION(BlueprintPure, Category = "IGI|Weather")
-    const FIGIWeatherState& GetWeatherState() const { return CurrentWeatherState; }
+    FIGIWeatherState GetWeatherState() const { return CurrentWeatherState; }
 
     UFUNCTION(BlueprintPure, Category = "IGI|Weather")
     FVector GetWindVelocity() const;
