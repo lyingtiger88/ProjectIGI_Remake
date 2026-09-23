@@ -107,6 +107,11 @@ int32 AIGIFirearmBase::ExtractMagazineAmmo(const int32 Amount)
     return Extracted;
 }
 
+void AIGIFirearmBase::SetCurrentMagazineAmmo(const int32 NewAmount)
+{
+    CurrentMagazineAmmo = FMath::Clamp(NewAmount, 0, GetMagazineCapacity());
+}
+
 bool AIGIFirearmBase::NotifyShotFired()
 {
     if (!TryConsumeRound())
