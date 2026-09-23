@@ -5,9 +5,10 @@
 #include "Weapons/IGIWeaponTypes.h"
 #include "IGIFirearmBase.generated.h"
 
+class AController;
 class UIGIInventoryComponent;
 
-UCLASS(Abstract, Blueprintable)
+UCLASS(Blueprintable)
 class PROJECTIGI_REMAKE_API AIGIFirearmBase : public AIGIWeaponBase
 {
     GENERATED_BODY()
@@ -39,15 +40,33 @@ public:
     UFUNCTION(BlueprintCallable, Category = "IGI|Weapon")
     bool NotifyShotFired();
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Weapon")
+    bool FireHitscan(AController* InstigatorController);
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
+    FVector GetLastShotImpactLocation() const { return LastShotImpactLocation; }
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
+    bool DidLastShotHit() const { return bLastShotHit; }
+
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IGI|Weapon|Ammo")
     bool bStartLoaded = true;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IGI|Weapon|Fire")
+    TEnumAsByte<ECollisionChannel> WeaponTraceChannel = ECC_Visibility;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "IGI|Weapon|Ammo")
     int32 CurrentMagazineAmmo = 0;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "IGI|Weapon|Ammo")
     EIGIFireMode CurrentFireMode = EIGIFireMode::SemiAutomatic;
+
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "IGI|Weapon|Fire")
+    FVector LastShotImpactLocation = FVector::ZeroVector;
+
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "IGI|Weapon|Fire")
+    bool bLastShotHit = false;
 
     void ResetRuntimeWeaponState();
 };
