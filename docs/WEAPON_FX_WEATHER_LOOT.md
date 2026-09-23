@@ -70,6 +70,22 @@ The casing ignores Pawn collision to avoid interfering with movement and is auto
 
 Once its rigid body goes to sleep, casing Tick is disabled.
 
+Casings can also create a small AI-hearing event when they strike the environment:
+
+```text
+BDFR.Acoustic.Weapon.CasingImpact
+```
+
+Only the first few meaningful impacts are audible. Surface and weather both modify the clink:
+
+- metal/concrete are louder,
+- grass, mud, sand and snow are quieter,
+- rain/wetness reduce the impact signature,
+- snow depth strongly muffles it,
+- storm/sandstorm background conditions reduce the effective casing-impact signature.
+
+This matters especially for suppressed weapons: a quiet shot can still be followed by a nearby casing clink.
+
 ## Weather response
 
 `UIGIWeatherWorldSubsystem` stores the current world weather:
@@ -127,6 +143,9 @@ Casings react directly to the weather state.
 
 The current weather can be set from Blueprint by getting the `IGIWeatherWorldSubsystem` and calling `SetWeatherState`.
 
+For quick level testing, place **IGI Weather State** in the level and edit its `WeatherState`.
+With `Apply On Begin Play` enabled, it pushes that state into the world subsystem automatically.
+
 ## Glock prototype testing
 
 The source-only `IGI Weapon Pickup` exposes:
@@ -140,6 +159,8 @@ Prototype Casing Mesh
 so the Glock test does not require a production Data Asset yet.
 
 Assign Niagara systems and a casing Static Mesh there, then fire with the existing prototype controls.
+
+The casing Static Mesh should have simple collision suitable for Chaos physics.
 
 ## Exact NPC / enemy ammunition
 
