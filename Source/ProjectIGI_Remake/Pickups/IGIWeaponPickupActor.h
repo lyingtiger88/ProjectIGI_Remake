@@ -5,8 +5,10 @@
 #include "IGIWeaponPickupActor.generated.h"
 
 class AIGIWeaponBase;
+class UNiagaraSystem;
 class UPrimitiveComponent;
 class USphereComponent;
+class UStaticMesh;
 class UStaticMeshComponent;
 class USkeletalMesh;
 class UIGIWeaponDataAsset;
@@ -51,6 +53,15 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype")
     TSoftObjectPtr<USkeletalMesh> PrototypeWeaponMesh;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Shot FX")
+    TSoftObjectPtr<UNiagaraSystem> PrototypeMuzzleFlashEffect;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Shot FX")
+    TSoftObjectPtr<UNiagaraSystem> PrototypeMuzzleSmokeEffect;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype|Shot FX")
+    TSoftObjectPtr<UStaticMesh> PrototypeCasingMesh;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup")
     bool bAutoEquip = true;
