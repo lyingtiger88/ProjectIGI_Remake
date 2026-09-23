@@ -178,22 +178,60 @@ void UIGIVisionComponent::RefreshPostProcess()
         return;
     }
 
-    VisionPostProcess->Settings.WeightedBlendables.Array.Reset();
+    // This component owns its own post-process settings, so rebuilding them on
+    // every mode switch cannot disturb the map's normal Post Process Volume.
+    VisionPostProcess->Settings = FPostProcessSettings();
 
     if (ActiveMode == EIGIVisionMode::Normal)
     {
         return;
     }
 
-    UMaterialInterface* Material = ResolveMaterialForMode(ActiveMode);
-    if (!IsValid(Material))
+    // Useful source-only fallback grading. Production materials can layer noise,
+    // lens masks, phosphor bloom, and proper CustomStencil thermal rendering.
+    switch (ActiveMode)
     {
-        return;
+        case EIGIVisionMode::Binoculars:
+            VisionPostProcess->Settings.bOverride_VignetteIntensity = true;
+            VisionPostProcess->Settings.VignetteIntensity = 0.55f;
+            break;
+
+        case EIGIVisionMode::NightVision:
+            VisionPostProcess->Settings.bOverride_SceneColorTint = true;
+            VisionPostProcess->Settings.SceneColorTint = FLinearColor(0.18f, 1.0f, 0.20f, 1.0f);
+            VisionPostProcess->Settings.bOverride_ColorSaturation = true;
+            VisionPostProcess->Settings.ColorSaturation = FVector4(0.20f, 1.15f, 0.20f, 1.0f);
+            VisionPostProcess->Settings.bOverride_AutoExposureBias = true;
+            VisionPostProcess->Settings.AutoExposureBias = 1.25f;
+            VisionPostProcess->Settings.bOverride_BloomIntensity = true;
+            VisionPostProcess->Settings.BloomIntensity = 0.85f;
+            VisionPostProcess->Settings.bOverride_VignetteIntensity = true;
+            VisionPostProcess->Settings.VignetteIntensity = 0.40f;
+            break;
+
+        case EIGIVisionMode::Thermal:
+            VisionPostProcess->Settings.bOverride_SceneColorTint = true;
+            VisionPostProcess->Settings.SceneColorTint = FLinearColor(1.0f, 0.48f, 0.12f, 1.0f);
+            VisionPostProcess->Settings.bOverride_ColorSaturation = true;
+            VisionPostProcess->Settings.ColorSaturation = FVector4(0.45f, 0.45f, 0.45f, 1.0f);
+            VisionPostProcess->Settings.bOverride_ColorContrast = true;
+            VisionPostProcess->Settings.ColorContrast = FVector4(1.30f, 1.30f, 1.30f, 1.0f);
+            VisionPostProcess->Settings.bOverride_VignetteIntensity = true;
+            VisionPostProcess->Settings.VignetteIntensity = 0.25f;
+            break;
+
+        case EIGIVisionMode::Normal:
+        default:
+            break;
     }
 
-    VisionPostProcess->Settings.AddBlendable(
-        Material,
-        GetPostProcessWeightForMode(ActiveMode));
+    if (UMaterialInterface* Material = ResolveMaterialForMode(ActiveMode);
+        IsValid(Material))
+    {
+        VisionPostProcess->Settings.AddBlendable(
+            Material,
+            GetPostProcessWeightForMode(ActiveMode));
+    }
 }
 
 UMaterialInterface* UIGIVisionComponent::ResolveMaterialForMode(
