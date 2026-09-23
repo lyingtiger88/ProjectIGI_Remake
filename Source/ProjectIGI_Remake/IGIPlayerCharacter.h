@@ -12,6 +12,7 @@ class UCameraComponent;
 class UBDFRTrackEmitterComponent;
 class UIGIAcousticSignatureComponent;
 class UIGICombatComponent;
+class UIGIHealthComponent;
 class UIGIInventoryComponent;
 class UIGITrackingSurfaceComponent;
 class UInputAction;
@@ -70,6 +71,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "IGI|Inventory")
 	UIGIInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Health")
+	UIGIHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
+	UFUNCTION(BlueprintCallable, Category = "IGI|Health")
+	bool UseMedKit();
 
 	UFUNCTION(BlueprintPure, Category = "IGI|Stealth")
 	UIGIAcousticSignatureComponent* GetAcousticSignatureComponent() const { return AcousticSignatureComponent; }
@@ -146,6 +153,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Inventory")
 	TObjectPtr<UIGIInventoryComponent> InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Health")
+	TObjectPtr<UIGIHealthComponent> HealthComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Health", meta = (ClampMin = "1.0"))
+	float MedKitHealAmount = 45.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Stealth")
 	TObjectPtr<UIGIAcousticSignatureComponent> AcousticSignatureComponent;
@@ -275,6 +288,7 @@ protected:
 	void Input_OnSwitchShoulder();
 	void Input_OnProneRollLeft();
 	void Input_OnProneRollRight();
+	void Input_OnUseMedKit();
 
 private:
 	UPROPERTY(Transient)

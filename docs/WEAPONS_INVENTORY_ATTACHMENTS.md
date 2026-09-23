@@ -188,3 +188,20 @@ hitscan shot. Flare purposes include illumination, air-support marking, and resc
 signaling.
 
 See [FLARE_GUN.md](FLARE_GUN.md).
+
+
+## Medical equipment
+
+Med Kits are counted inventory equipment rather than weapon slots.
+
+Default carry limit:
+
+```text
+MaxMedKits = 3
+```
+
+Each Med Kit contributes to carried weight and equipment noise. The player can
+consume one to heal through the health component, and NPC Med Kits can be looted
+using their exact remaining inventory count.
+
+See [MED_KIT.md](MED_KIT.md).

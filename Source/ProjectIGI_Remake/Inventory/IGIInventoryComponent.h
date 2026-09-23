@@ -93,6 +93,9 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0"))
     int32 MaxUtilityExplosives = 2;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0"))
+    int32 MaxMedKits = 3;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Carry")
     float FreeWeightThresholdKg = 8.0f;
 

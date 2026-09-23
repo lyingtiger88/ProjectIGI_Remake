@@ -150,7 +150,8 @@ enum class EIGIEquipmentType : uint8
     SmokeGrenade,
     C4,
     ProximityMine,
-    Claymore
+    Claymore,
+    MedKit
 };
 
 UENUM(BlueprintType)
