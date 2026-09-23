@@ -6,6 +6,7 @@
 
 class UCameraComponent;
 class UInputAction;
+class UBDFRIndirectVisualSourceComponent;
 class UInputMappingContext;
 class USpringArmComponent;
 struct FInputActionValue;
@@ -29,6 +30,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	TObjectPtr<UCameraComponent> FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|AI|Indirect Visual")
+	TObjectPtr<UBDFRIndirectVisualSourceComponent> IndirectVisualSourceComponent;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "IGI|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
