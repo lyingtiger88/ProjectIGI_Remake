@@ -46,7 +46,10 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] spread application
 - [ ] hitscan/projectile implementation
 - [ ] impact feedback
-- [ ] muzzle flash presentation
+- [x] Niagara muzzle flash presentation foundation
+- [x] muzzle smoke presentation foundation
+- [x] physical shell casing ejection
+- [x] weather-aware casing physics
 - [ ] upper-body animation layer
 - [ ] reload animation/montage integration
 
@@ -97,6 +100,7 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] interaction framework
 - [ ] mission objectives
 - [x] inventory/equipment foundation
+- [x] exact remaining NPC/enemy ammunition loot foundation
 - [ ] smoke air-support / rescue mission hooks
 - [ ] C4 / Claymore placement and detonation behavior
 - [ ] checkpoints/save data
