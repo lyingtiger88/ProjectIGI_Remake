@@ -48,8 +48,12 @@ After rebuilding the editor:
    - `Prototype Preset = Glock17`
    - `Auto Equip = true`
    - `Initial Reserve Ammo = 34` or another test value.
-4. Optionally assign a Glock skeletal mesh to `Prototype Weapon Mesh`.
-5. Optionally assign a visible world mesh to the pickup's `Pickup Mesh`.
+4. If you have a Glock skeletal mesh, assign it to `Prototype Weapon Mesh`.
+5. If you only have a static mesh, assign it to the pickup component `Pickup Mesh`.
+
+When `Prototype Weapon Mesh` is empty, the prototype now automatically reuses the `Pickup Mesh`
+static mesh as the equipped weapon visual. This makes the first pickup test visible without requiring
+a skeletal weapon asset.
 
 If no production Weapon Data Asset is assigned, the pickup creates temporary Glock 17 data with:
 
@@ -139,3 +143,20 @@ DA_ATT_PistolSuppressor
 Then assign real meshes, sockets, sounds, muzzle effects, animation profiles, and final balance data.
 
 The pickup actors already prefer assigned production Data Assets over prototype presets.
+
+
+## Pickup debugging
+
+Weapon pickup overlap explicitly enables overlap events and prints diagnostic messages to Output Log.
+
+Useful messages include:
+
+```text
+IGI Weapon Pickup ready
+IGI picked up weapon 'Glock 17'...
+AutoEquip failed
+no compatible/free carry slot
+failed to spawn weapon class
+```
+
+The actor also exposes `TryPickupByActor` to Blueprint for manual interaction/debug paths.

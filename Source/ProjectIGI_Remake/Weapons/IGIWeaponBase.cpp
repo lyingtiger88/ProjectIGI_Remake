@@ -2,6 +2,7 @@
 
 #include "Acoustics/BDFRAcousticEventLibrary.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Weapons/IGIWeaponAttachmentComponent.h"
 #include "Weapons/IGIWeaponDataAsset.h"
 
@@ -13,6 +14,11 @@ AIGIWeaponBase::AIGIWeaponBase()
     SetRootComponent(WeaponMesh);
     WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+    StaticWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticWeaponMesh"));
+    StaticWeaponMesh->SetupAttachment(WeaponMesh);
+    StaticWeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    StaticWeaponMesh->SetVisibility(false, true);
+
     AttachmentComponent = CreateDefaultSubobject<UIGIWeaponAttachmentComponent>(TEXT("AttachmentComponent"));
 }
 
@@ -20,15 +26,47 @@ void AIGIWeaponBase::InitializeFromData(UIGIWeaponDataAsset* InWeaponData)
 {
     WeaponData = InWeaponData;
 
-    if (!IsValid(WeaponData) || WeaponData->WeaponMesh.IsNull())
+    if (!IsValid(WeaponData))
     {
         return;
     }
 
-    if (USkeletalMesh* Mesh = WeaponData->WeaponMesh.LoadSynchronous(); IsValid(Mesh))
+    WeaponMesh->SetSkeletalMeshAsset(nullptr);
+    StaticWeaponMesh->SetStaticMesh(nullptr);
+    StaticWeaponMesh->SetVisibility(false, true);
+
+    if (!WeaponData->WeaponMesh.IsNull())
     {
-        WeaponMesh->SetSkeletalMeshAsset(Mesh);
+        if (USkeletalMesh* Mesh = WeaponData->WeaponMesh.LoadSynchronous(); IsValid(Mesh))
+        {
+            WeaponMesh->SetSkeletalMeshAsset(Mesh);
+            return;
+        }
     }
+
+    if (!WeaponData->WeaponStaticMesh.IsNull())
+    {
+        if (UStaticMesh* Mesh = WeaponData->WeaponStaticMesh.LoadSynchronous(); IsValid(Mesh))
+        {
+            StaticWeaponMesh->SetStaticMesh(Mesh);
+            StaticWeaponMesh->SetVisibility(true, true);
+        }
+    }
+}
+
+USceneComponent* AIGIWeaponBase::GetWeaponVisualComponent() const
+{
+    if (IsValid(WeaponMesh) && IsValid(WeaponMesh->GetSkeletalMeshAsset()))
+    {
+        return WeaponMesh;
+    }
+
+    if (IsValid(StaticWeaponMesh) && IsValid(StaticWeaponMesh->GetStaticMesh()))
+    {
+        return StaticWeaponMesh;
+    }
+
+    return WeaponMesh;
 }
 
 void AIGIWeaponBase::EquipTo(
@@ -193,9 +231,17 @@ void AIGIWeaponBase::ReportAttachmentHandlingNoise()
 
 FVector AIGIWeaponBase::GetAcousticLocation() const
 {
-    if (IsValid(WeaponData) && IsValid(WeaponMesh) && WeaponMesh->DoesSocketExist(WeaponData->MuzzleSocket))
+    if (IsValid(WeaponData))
     {
-        return WeaponMesh->GetSocketLocation(WeaponData->MuzzleSocket);
+        if (IsValid(WeaponMesh) && WeaponMesh->DoesSocketExist(WeaponData->MuzzleSocket))
+        {
+            return WeaponMesh->GetSocketLocation(WeaponData->MuzzleSocket);
+        }
+
+        if (IsValid(StaticWeaponMesh) && StaticWeaponMesh->DoesSocketExist(WeaponData->MuzzleSocket))
+        {
+            return StaticWeaponMesh->GetSocketLocation(WeaponData->MuzzleSocket);
+        }
     }
 
     return GetActorLocation();

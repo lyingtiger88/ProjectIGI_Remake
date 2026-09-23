@@ -8,6 +8,7 @@ class UIGIWeaponAttachmentComponent;
 class UIGIWeaponDataAsset;
 class USceneComponent;
 class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 UCLASS(Abstract, Blueprintable)
 class PROJECTIGI_REMAKE_API AIGIWeaponBase : public AActor
@@ -25,6 +26,12 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
     USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
+    UStaticMeshComponent* GetStaticWeaponMesh() const { return StaticWeaponMesh; }
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
+    USceneComponent* GetWeaponVisualComponent() const;
 
     UFUNCTION(BlueprintPure, Category = "IGI|Weapon")
     UIGIWeaponAttachmentComponent* GetAttachmentComponent() const { return AttachmentComponent; }
@@ -74,6 +81,9 @@ public:
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Weapon")
     TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Weapon")
+    TObjectPtr<UStaticMeshComponent> StaticWeaponMesh;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Weapon")
     TObjectPtr<UIGIWeaponAttachmentComponent> AttachmentComponent;

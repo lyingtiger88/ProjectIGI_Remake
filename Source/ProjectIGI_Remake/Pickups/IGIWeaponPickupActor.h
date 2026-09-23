@@ -26,6 +26,9 @@ class PROJECTIGI_REMAKE_API AIGIWeaponPickupActor : public AActor
 public:
     AIGIWeaponPickupActor();
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Pickup")
+    bool TryPickupByActor(AActor* OtherActor);
+
 protected:
     virtual void BeginPlay() override;
 

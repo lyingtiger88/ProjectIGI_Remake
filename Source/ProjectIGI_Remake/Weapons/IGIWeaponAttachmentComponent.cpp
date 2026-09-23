@@ -217,7 +217,9 @@ void UIGIWeaponAttachmentComponent::RefreshVisual(const EIGIAttachmentSlot Slot)
     }
 
     UStaticMesh* Mesh = Attachment->Mesh.LoadSynchronous();
-    if (!IsValid(Mesh) || !IsValid(Weapon->GetWeaponMesh()))
+    USceneComponent* AttachmentParent = Weapon->GetWeaponVisualComponent();
+
+    if (!IsValid(Mesh) || !IsValid(AttachmentParent))
     {
         return;
     }
@@ -238,7 +240,7 @@ void UIGIWeaponAttachmentComponent::RefreshVisual(const EIGIAttachmentSlot Slot)
         : Attachment->AttachSocketName;
 
     Visual->AttachToComponent(
-        Weapon->GetWeaponMesh(),
+        AttachmentParent,
         FAttachmentTransformRules::SnapToTargetNotIncludingScale,
         SocketName);
 
