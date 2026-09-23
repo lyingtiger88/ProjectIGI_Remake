@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "IGIHealthComponent.generated.h"
 
+class AActor;
 class AController;
 class UDamageType;
 
