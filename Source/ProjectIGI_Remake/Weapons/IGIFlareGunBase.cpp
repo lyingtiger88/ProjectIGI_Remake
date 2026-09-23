@@ -8,7 +8,6 @@
 
 AIGIFlareGunBase::AIGIFlareGunBase()
 {
-    FlareProjectileClass = AIGIFlareProjectileActor::StaticClass();
 }
 
 bool AIGIFlareGunBase::FireHitscan(AController* InstigatorController)
@@ -38,12 +37,9 @@ bool AIGIFlareGunBase::FireHitscan(AController* InstigatorController)
     const FTransform MuzzleTransform =
         GetWeaponSocketTransform(WeaponData->MuzzleSocket);
 
-    const FVector SpawnLocation = MuzzleTransform.GetLocation();
-    const FRotator SpawnRotation = ViewRotation;
-
     const TSubclassOf<AIGIFlareProjectileActor> ProjectileClass =
-        FlareProjectileClass
-            ? FlareProjectileClass
+        WeaponData->FlareProjectileClass
+            ? WeaponData->FlareProjectileClass
             : AIGIFlareProjectileActor::StaticClass();
 
     FActorSpawnParameters SpawnParameters;
@@ -54,8 +50,8 @@ bool AIGIFlareGunBase::FireHitscan(AController* InstigatorController)
 
     AIGIFlareProjectileActor* Flare = World->SpawnActor<AIGIFlareProjectileActor>(
         ProjectileClass,
-        SpawnLocation,
-        SpawnRotation,
+        MuzzleTransform.GetLocation(),
+        ViewRotation,
         SpawnParameters);
 
     if (!IsValid(Flare))
@@ -64,24 +60,25 @@ bool AIGIFlareGunBase::FireHitscan(AController* InstigatorController)
     }
 
     UStaticMesh* ProjectileMesh =
-        FlareProjectileMesh.IsNull()
+        WeaponData->FlareProjectileMesh.IsNull()
             ? nullptr
-            : FlareProjectileMesh.LoadSynchronous();
+            : WeaponData->FlareProjectileMesh.LoadSynchronous();
 
     UNiagaraSystem* TrailEffect =
-        FlareTrailEffect.IsNull()
+        WeaponData->FlareTrailEffect.IsNull()
             ? nullptr
-            : FlareTrailEffect.LoadSynchronous();
+            : WeaponData->FlareTrailEffect.LoadSynchronous();
 
     Flare->InitializeFlare(
-        FlarePurpose,
-        FlareLaunchSpeed,
-        FlareLifeSeconds,
+        WeaponData->FlarePurpose,
+        WeaponData->FlareLaunchSpeed,
+        WeaponData->FlareLifeSeconds,
         ProjectileMesh,
         TrailEffect);
 
     LastShotImpactLocation =
-        SpawnLocation + SpawnRotation.Vector() * WeaponData->EffectiveRangeCm;
+        MuzzleTransform.GetLocation() +
+        ViewRotation.Vector() * WeaponData->EffectiveRangeCm;
 
     return true;
 }
