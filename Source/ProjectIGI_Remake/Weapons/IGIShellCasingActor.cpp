@@ -90,8 +90,35 @@ void AIGIShellCasingActor::InitializeCasing(
 
     if (IsValid(CasingMesh))
     {
-        CasingMesh->SetPhysicsLinearVelocity(InitialVelocity);
-        CasingMesh->SetPhysicsAngularVelocityInDegrees(InitialAngularVelocityDegrees);
+        float VelocityMultiplier = 1.0f;
+
+        switch (SpawnWeatherState.WeatherType)
+        {
+            case EIGIWeatherType::Rain:
+                VelocityMultiplier = 0.92f;
+                break;
+
+            case EIGIWeatherType::Snow:
+                VelocityMultiplier = 0.78f;
+                break;
+
+            case EIGIWeatherType::Storm:
+                VelocityMultiplier = 0.94f;
+                break;
+
+            case EIGIWeatherType::Sandstorm:
+                VelocityMultiplier = 0.86f;
+                break;
+
+            case EIGIWeatherType::Clear:
+            default:
+                VelocityMultiplier = 1.0f;
+                break;
+        }
+
+        CasingMesh->SetPhysicsLinearVelocity(InitialVelocity * VelocityMultiplier);
+        CasingMesh->SetPhysicsAngularVelocityInDegrees(
+            InitialAngularVelocityDegrees * VelocityMultiplier);
         CasingMesh->WakeAllRigidBodies();
     }
 }
