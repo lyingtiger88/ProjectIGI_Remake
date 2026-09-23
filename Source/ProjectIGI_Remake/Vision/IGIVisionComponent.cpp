@@ -53,22 +53,19 @@ void UIGIVisionComponent::InitializeVision(
 
 bool UIGIVisionComponent::SetVisionMode(const EIGIVisionMode NewMode)
 {
-    const EIGIVisionMode DesiredMode =
-        NewMode == ActiveMode ? EIGIVisionMode::Normal : NewMode;
-
-    if (DesiredMode != EIGIVisionMode::Normal &&
-        !HasRequiredEquipment(DesiredMode))
+    if (NewMode != EIGIVisionMode::Normal &&
+        !HasRequiredEquipment(NewMode))
     {
         return false;
     }
 
-    if (ActiveMode == DesiredMode)
+    if (ActiveMode == NewMode)
     {
         return true;
     }
 
     const EIGIVisionMode PreviousMode = ActiveMode;
-    ActiveMode = DesiredMode;
+    ActiveMode = NewMode;
 
     if (ActiveMode == EIGIVisionMode::Binoculars)
     {
@@ -85,17 +82,26 @@ bool UIGIVisionComponent::SetVisionMode(const EIGIVisionMode NewMode)
 
 bool UIGIVisionComponent::ToggleBinoculars()
 {
-    return SetVisionMode(EIGIVisionMode::Binoculars);
+    return SetVisionMode(
+        IsBinocularsActive()
+            ? EIGIVisionMode::Normal
+            : EIGIVisionMode::Binoculars);
 }
 
 bool UIGIVisionComponent::ToggleNightVision()
 {
-    return SetVisionMode(EIGIVisionMode::NightVision);
+    return SetVisionMode(
+        IsNightVisionActive()
+            ? EIGIVisionMode::Normal
+            : EIGIVisionMode::NightVision);
 }
 
 bool UIGIVisionComponent::ToggleThermal()
 {
-    return SetVisionMode(EIGIVisionMode::Thermal);
+    return SetVisionMode(
+        IsThermalActive()
+            ? EIGIVisionMode::Normal
+            : EIGIVisionMode::Thermal);
 }
 
 bool UIGIVisionComponent::AdjustBinocularZoom(const float FovDeltaDegrees)
@@ -111,6 +117,16 @@ bool UIGIVisionComponent::AdjustBinocularZoom(const float FovDeltaDegrees)
         BinocularMaximumFov);
 
     return true;
+}
+
+bool UIGIVisionComponent::ZoomBinocularsIn()
+{
+    return AdjustBinocularZoom(-FMath::Abs(BinocularZoomStep));
+}
+
+bool UIGIVisionComponent::ZoomBinocularsOut()
+{
+    return AdjustBinocularZoom(FMath::Abs(BinocularZoomStep));
 }
 
 void UIGIVisionComponent::DisableVision()
