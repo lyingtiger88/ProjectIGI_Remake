@@ -5,6 +5,7 @@
 #include "Weapons/IGIWeaponTypes.h"
 #include "IGIWeaponDataAsset.generated.h"
 
+class AIGIFlareProjectileActor;
 class AIGIShellCasingActor;
 class UNiagaraSystem;
 class USkeletalMesh;
@@ -151,4 +152,22 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
     EIGISmokePurpose SmokePurpose = EIGISmokePurpose::Tactical;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Flare")
+    EIGIFlarePurpose FlarePurpose = EIGIFlarePurpose::Illumination;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Flare")
+    TSubclassOf<AIGIFlareProjectileActor> FlareProjectileClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Flare")
+    TSoftObjectPtr<UStaticMesh> FlareProjectileMesh;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Flare")
+    TSoftObjectPtr<UNiagaraSystem> FlareTrailEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Flare", meta = (ClampMin = "100.0", ForceUnits = "cm/s"))
+    float FlareLaunchSpeed = 1800.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Flare", meta = (ClampMin = "1.0", ForceUnits = "s"))
+    float FlareLifeSeconds = 22.0f;
 };
