@@ -106,6 +106,20 @@ Individual weapon models should normally be Data Assets rather than one C++ subc
 
 See [WEAPONS_INVENTORY_ATTACHMENTS.md](WEAPONS_INVENTORY_ATTACHMENTS.md).
 
+### Weapon shot presentation and environment
+
+`AIGIFirearmBase` owns the runtime shot event and drives data-authored presentation:
+
+- Niagara muzzle flash,
+- Niagara muzzle smoke,
+- physical shell casing ejection,
+- casing lifetime and physics,
+- optional Niagara wind/precipitation parameters.
+
+`UIGIWeatherWorldSubsystem` provides the current environmental state. Ejected
+`AIGIShellCasingActor` instances use it to adjust initial energy, damping and continuous wind response
+for clear, rain, snow, storm and sandstorm conditions.
+
 ### Inventory and physical carry model
 
 `UIGIInventoryComponent` is a tactical loadout, not an unlimited backpack.
@@ -125,6 +139,14 @@ SCK_Utility_Explosive
 ```
 
 Weapon Data Assets define compatible carry slots, so body/socket compatibility is part of weapon configuration.
+
+### Deterministic NPC ammunition loot
+
+NPCs/enemies use the same `UIGIInventoryComponent` and `AIGIFirearmBase` state as the player.
+`UIGILootableInventoryComponent` transfers the actual remaining reserve rounds and, when requested,
+the actual rounds still loaded in magazines. It never generates random death-time ammunition.
+
+If the recipient is at carry capacity, unaccepted rounds remain on the source actor.
 
 ### Acoustic stealth
 
