@@ -5,6 +5,8 @@
 #include "IGIPlayerCharacter.generated.h"
 
 class UCameraComponent;
+class UBDFRTrackEmitterComponent;
+class UIGITrackingSurfaceComponent;
 class UInputAction;
 class UInputMappingContext;
 class USpringArmComponent;
@@ -23,12 +25,24 @@ public:
 	virtual void NotifyControllerChanged() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintPure, Category = "IGI|Tracking")
+	UBDFRTrackEmitterComponent* GetTrackEmitterComponent() const { return TrackEmitterComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Tracking")
+	UIGITrackingSurfaceComponent* GetTrackingSurfaceComponent() const { return TrackingSurfaceComponent; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	TObjectPtr<UCameraComponent> FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Tracking")
+	TObjectPtr<UBDFRTrackEmitterComponent> TrackEmitterComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Tracking")
+	TObjectPtr<UIGITrackingSurfaceComponent> TrackingSurfaceComponent;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "IGI|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
