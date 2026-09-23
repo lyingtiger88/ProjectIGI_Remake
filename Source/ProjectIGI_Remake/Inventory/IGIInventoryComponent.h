@@ -6,6 +6,7 @@
 #include "IGIInventoryComponent.generated.h"
 
 class AIGIWeaponBase;
+class UIGICombatComponent;
 
 UCLASS(ClassGroup = (IGI), meta = (BlueprintSpawnableComponent))
 class PROJECTIGI_REMAKE_API UIGIInventoryComponent : public UActorComponent
@@ -15,14 +16,25 @@ class PROJECTIGI_REMAKE_API UIGIInventoryComponent : public UActorComponent
 public:
     UIGIInventoryComponent();
 
+    virtual void BeginPlay() override;
+
     UFUNCTION(BlueprintCallable, Category = "IGI|Inventory")
     bool TryStoreWeapon(AIGIWeaponBase* Weapon, EIGICarrySlot& OutSlot);
 
     UFUNCTION(BlueprintCallable, Category = "IGI|Inventory")
     bool RemoveWeapon(AIGIWeaponBase* Weapon);
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Inventory")
+    bool EquipWeaponInSlot(EIGICarrySlot Slot);
+
+    UFUNCTION(BlueprintCallable, Category = "IGI|Inventory")
+    bool UnequipActiveWeapon();
+
     UFUNCTION(BlueprintPure, Category = "IGI|Inventory")
     AIGIWeaponBase* GetWeaponInSlot(EIGICarrySlot Slot) const;
+
+    UFUNCTION(BlueprintPure, Category = "IGI|Inventory")
+    AIGIWeaponBase* GetActiveWeapon() const;
 
     UFUNCTION(BlueprintPure, Category = "IGI|Inventory")
     FName GetSocketNameForSlot(EIGICarrySlot Slot) const;
@@ -79,6 +91,15 @@ private:
 
     UPROPERTY(Transient)
     TMap<EIGIEquipmentType, int32> EquipmentCounts;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UIGICombatComponent> CombatComponent;
+
+    UPROPERTY(Transient)
+    EIGICarrySlot ActiveWeaponSlot = EIGICarrySlot::Weapon01;
+
+    UPROPERTY(Transient)
+    bool bHasActiveWeaponSlot = false;
 
     bool FindFreeCompatibleSlot(const AIGIWeaponBase* Weapon, EIGICarrySlot& OutSlot) const;
     bool IsPhysicalWeaponSlot(EIGICarrySlot Slot) const;
