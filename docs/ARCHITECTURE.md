@@ -156,6 +156,19 @@ SCK_Utility_Explosive
 
 Weapon Data Assets define compatible carry slots, so body/socket compatibility is part of weapon configuration.
 
+### Health and medical equipment
+
+`UIGIHealthComponent` is the shared health foundation. It listens to Unreal damage events, owns
+current/max health, exposes healing, and broadcasts health/death state without coupling presentation
+or death behavior into the component.
+
+The player owns the component by default. Med Kits are counted through
+`UIGIInventoryComponent` as `EIGIEquipmentType::MedKit`. Using a kit consumes one real inventory
+item only when healing can actually be applied.
+
+`AIGIMedKitPickupActor` supports partial pickup: if the recipient can only accept part of a stack,
+the uncollected kits remain in the world actor. NPC loot uses the same exact-count rule.
+
 ### Deterministic NPC ammunition loot
 
 NPCs/enemies use the same `UIGIInventoryComponent` and `AIGIFirearmBase` state as the player.
