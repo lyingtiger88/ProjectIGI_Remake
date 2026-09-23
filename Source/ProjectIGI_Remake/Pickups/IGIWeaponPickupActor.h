@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Weapons/IGIWeaponTypes.h"
 #include "IGIWeaponPickupActor.generated.h"
 
 class AIGIWeaponBase;
