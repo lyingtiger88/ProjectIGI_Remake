@@ -15,6 +15,7 @@ public class ProjectIGI_Remake : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"GameplayTags",
+			"AIModule",
 			"ALS",
 			"BDFR_InteractiveAI"
 		});
