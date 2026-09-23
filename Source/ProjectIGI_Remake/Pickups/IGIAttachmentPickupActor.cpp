@@ -7,6 +7,7 @@
 #include "Weapons/IGIWeaponAttachmentComponent.h"
 #include "Weapons/IGIWeaponAttachmentDataAsset.h"
 #include "Weapons/IGIWeaponBase.h"
+#include "UObject/Package.h"
 
 AIGIAttachmentPickupActor::AIGIAttachmentPickupActor()
 {
@@ -104,7 +105,7 @@ UIGIWeaponAttachmentDataAsset* AIGIAttachmentPickupActor::ResolveAttachmentData(
 UIGIWeaponAttachmentDataAsset* AIGIAttachmentPickupActor::CreatePrototypePistolSuppressor()
 {
     UIGIWeaponAttachmentDataAsset* Data =
-        NewObject<UIGIWeaponAttachmentDataAsset>(this, TEXT("Runtime_PistolSuppressor_Data"));
+        NewObject<UIGIWeaponAttachmentDataAsset>(GetTransientPackage());
 
     if (!IsValid(Data))
     {
