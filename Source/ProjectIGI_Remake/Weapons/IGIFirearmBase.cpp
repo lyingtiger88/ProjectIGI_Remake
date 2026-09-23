@@ -259,7 +259,7 @@ void AIGIFirearmBase::PlayShotEffects()
                             World->GetSubsystem<UIGIWeatherWorldSubsystem>();
                         IsValid(Weather))
                     {
-                        const FIGIWeatherState& WeatherState = Weather->GetWeatherState();
+                        const FIGIWeatherState WeatherState = Weather->GetWeatherState();
 
                         Smoke->SetVariableVec3(
                             TEXT("User.WindVelocity"),
