@@ -30,7 +30,11 @@ AIGIPlayerCharacter
 │   └── Melee / CQC
 ├── Health / Damage
 ├── Interaction
-└── Stealth / Awareness hooks
+└── Stealth / Awareness
+    ├── BDFR track emitter
+    ├── Physical-surface resolver
+    ├── Human footprint tracking
+    └── Canine scent tracking
 ```
 
 ### Locomotion
@@ -86,3 +90,31 @@ Planned responsibilities:
 Prefer communication through components, gameplay tags, interfaces, or well-defined events rather than adding weapon/CQC knowledge directly to ALS classes.
 
 That separation makes it easier to update ALS and keeps combat code reusable.
+
+
+## Tracking / stealth boundary
+
+ProjectIGI owns the integration layer while BDFR owns the reusable tracking engine.
+
+```text
+ProjectIGI                           BDFR Interactive AI
+-----------                          -------------------
+AIGIPlayerCharacter             ->  UBDFRTrackEmitterComponent
+UIGITrackingSurfaceComponent    ->  EBDFRTrackSurfaceType
+AIGIEnemyAIController           ->  UBDFRFootprintTrackingComponent
+AIGIDogAIController             ->  UBDFRCanineTrackingComponent
+                                      |
+                                      v
+                              UBDFRTrackingWorldSubsystem
+```
+
+The player emits lightweight logical track samples. No footprint Actor is spawned per step.
+The world subsystem stores the samples, and AI tracking components query them.
+
+ProjectIGI maps Unreal Physical Surfaces to BDFR surface categories so mud, snow, grass,
+concrete, metal, and water affect footprint/scent strength without coupling BDFR to project assets.
+
+Visible footprint decals are presentation only and should subscribe to the emitter event rather
+than becoming the source of AI tracking truth.
+
+See [TRACKING_SCENT.md](TRACKING_SCENT.md) for the full integration contract and tuning.
