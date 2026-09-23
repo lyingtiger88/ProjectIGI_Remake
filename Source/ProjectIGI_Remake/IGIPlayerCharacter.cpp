@@ -29,6 +29,7 @@
 #include "Tracking/BDFRTrackEmitterComponent.h"
 #include "Tracking/IGITrackingSurfaceComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Vision/IGIVisionComponent.h"
 #include "Weapons/IGIFirearmBase.h"
 
 AIGIPlayerCharacter::AIGIPlayerCharacter()
@@ -41,6 +42,7 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 	InventoryComponent = CreateDefaultSubobject<UIGIInventoryComponent>(TEXT("IGIInventory"));
 	HealthComponent = CreateDefaultSubobject<UIGIHealthComponent>(TEXT("IGIHealth"));
 	AcousticSignatureComponent = CreateDefaultSubobject<UIGIAcousticSignatureComponent>(TEXT("IGIAcousticSignature"));
+	VisionComponent = CreateDefaultSubobject<UIGIVisionComponent>(TEXT("IGIVision"));
 	DistractionThrowableClass = AIGIDistractionThrowableActor::StaticClass();
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -122,6 +124,27 @@ void AIGIPlayerCharacter::BeginPlay()
 
 	RefreshAlsAnimationInstance();
 	RefreshInputMappingContext();
+
+	if (IsValid(InventoryComponent))
+	{
+		if (bStartWithBinoculars)
+		{
+			InventoryComponent->AddEquipment(EIGIEquipmentType::Binoculars, 1);
+		}
+		if (bStartWithNightVisionGoggles)
+		{
+			InventoryComponent->AddEquipment(EIGIEquipmentType::NightVisionGoggles, 1);
+		}
+		if (bStartWithThermalViewer)
+		{
+			InventoryComponent->AddEquipment(EIGIEquipmentType::ThermalViewer, 1);
+		}
+	}
+
+	if (IsValid(VisionComponent))
+	{
+		VisionComponent->InitializeVision(FollowCamera, InventoryComponent);
+	}
 
 	if (IsValid(GetCapsuleComponent()))
 	{
@@ -237,6 +260,11 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindKey(EKeys::Q, IE_Pressed, this, &ThisClass::Input_OnSwitchShoulder);
 	PlayerInputComponent->BindKey(EKeys::H, IE_Pressed, this, &ThisClass::Input_OnUseMedKit);
 	PlayerInputComponent->BindKey(EKeys::T, IE_Pressed, this, &ThisClass::Input_OnThrowDistraction);
+	PlayerInputComponent->BindKey(EKeys::B, IE_Pressed, this, &ThisClass::Input_OnToggleBinoculars);
+	PlayerInputComponent->BindKey(EKeys::N, IE_Pressed, this, &ThisClass::Input_OnToggleNightVision);
+	PlayerInputComponent->BindKey(EKeys::V, IE_Pressed, this, &ThisClass::Input_OnToggleThermal);
+	PlayerInputComponent->BindKey(EKeys::MouseScrollUp, IE_Pressed, this, &ThisClass::Input_OnVisionZoomIn);
+	PlayerInputComponent->BindKey(EKeys::MouseScrollDown, IE_Pressed, this, &ThisClass::Input_OnVisionZoomOut);
 
 	// Temporary source-only prone roll controls until dedicated Enhanced Input assets are authored.
 	PlayerInputComponent->BindKey(EKeys::Z, IE_Pressed, this, &ThisClass::Input_OnProneRollLeft);
@@ -631,7 +659,8 @@ void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 
 void AIGIPlayerCharacter::Input_OnFire()
 {
-	if (bProneRolling)
+	if (bProneRolling ||
+		(IsValid(VisionComponent) && VisionComponent->IsBinocularsActive()))
 	{
 		return;
 	}
@@ -676,7 +705,8 @@ void AIGIPlayerCharacter::Input_OnFire()
 
 void AIGIPlayerCharacter::Input_OnReload()
 {
-	if (bProneRolling)
+	if (bProneRolling ||
+		(IsValid(VisionComponent) && VisionComponent->IsBinocularsActive()))
 	{
 		return;
 	}
@@ -762,6 +792,59 @@ void AIGIPlayerCharacter::Input_OnUseMedKit()
 void AIGIPlayerCharacter::Input_OnThrowDistraction()
 {
 	ThrowDistractionObject();
+}
+
+void AIGIPlayerCharacter::Input_OnToggleBinoculars()
+{
+	if (!IsValid(VisionComponent))
+	{
+		return;
+	}
+
+	const bool bEnabled = VisionComponent->ToggleBinoculars();
+
+	if (bEnabled && VisionComponent->IsBinocularsActive())
+	{
+		bAimInputHeld = false;
+		SetDesiredAiming(false);
+
+		if (IsValid(CombatComponent))
+		{
+			CombatComponent->StopAim();
+		}
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnToggleNightVision()
+{
+	if (IsValid(VisionComponent))
+	{
+		VisionComponent->ToggleNightVision();
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnToggleThermal()
+{
+	if (IsValid(VisionComponent))
+	{
+		VisionComponent->ToggleThermal();
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnVisionZoomIn()
+{
+	if (IsValid(VisionComponent))
+	{
+		VisionComponent->AdjustBinocularZoom(-4.0f);
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnVisionZoomOut()
+{
+	if (IsValid(VisionComponent))
+	{
+		VisionComponent->AdjustBinocularZoom(4.0f);
+	}
 }
 
 bool AIGIPlayerCharacter::ThrowDistractionObject()
@@ -1109,6 +1192,15 @@ float AIGIPlayerCharacter::GetTargetCameraArmLength() const
 
 float AIGIPlayerCharacter::GetTargetCameraFieldOfView() const
 {
+	if (IsValid(VisionComponent))
+	{
+		const float VisionFov = VisionComponent->GetFieldOfViewOverride();
+		if (VisionFov > KINDA_SMALL_NUMBER)
+		{
+			return VisionFov;
+		}
+	}
+
 	if (!bAimInputHeld)
 	{
 		return HipFieldOfView;
