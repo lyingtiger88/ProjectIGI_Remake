@@ -151,3 +151,20 @@ but its range/loudness still scales with the player's current carried-load multi
 Physical shell casings can create a small `BDFR.Acoustic.Weapon.CasingImpact` event on meaningful
 environment hits. Metal and concrete are louder; soft surfaces and wet/snowy weather muffle the
 signature. Only the first few impacts are reported to avoid noisy AI stimulus spam.
+
+
+## Distraction impacts
+
+Throwable distraction objects emit semantic impact tags under:
+
+```text
+BDFR.Acoustic.Distraction.Impact.*
+```
+
+Surface material changes effective loudness/range. The thrown object is used as the hearing stimulus
+source, so the impact does not directly reveal the player as the sound source.
+
+`AIGIEnemyAIController` applies a second, difficulty-aware lure evaluation after BDFR hearing.
+Sergeant/Commando/SAS guards are intentionally resistant to repeated or weak distraction sounds.
+
+See [DISTRACTION_SYSTEM.md](DISTRACTION_SYSTEM.md).
