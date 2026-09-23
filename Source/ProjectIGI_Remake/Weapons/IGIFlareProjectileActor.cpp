@@ -20,7 +20,6 @@ AIGIFlareProjectileActor::AIGIFlareProjectileActor()
     CollisionSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     CollisionSphere->SetCollisionObjectType(ECC_WorldDynamic);
     CollisionSphere->SetCollisionResponseToAllChannels(ECR_Block);
-    CollisionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
     FlareMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FlareMesh"));
     FlareMesh->SetupAttachment(CollisionSphere);
@@ -51,7 +50,6 @@ void AIGIFlareProjectileActor::BeginPlay()
     Super::BeginPlay();
 
     ApplyWeatherToLight();
-    ActivateSignal(GetActorLocation());
 }
 
 void AIGIFlareProjectileActor::Tick(const float DeltaSeconds)
@@ -93,6 +91,11 @@ void AIGIFlareProjectileActor::InitializeFlare(
     UNiagaraSystem* InTrailEffect)
 {
     FlarePurpose = InPurpose;
+
+    if (IsValid(CollisionSphere) && IsValid(GetOwner()))
+    {
+        CollisionSphere->IgnoreActorWhenMoving(GetOwner(), true);
+    }
 
     if (IsValid(FlareMesh) && IsValid(InMesh))
     {
