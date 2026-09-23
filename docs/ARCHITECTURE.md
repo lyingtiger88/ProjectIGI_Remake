@@ -177,6 +177,22 @@ the actual rounds still loaded in magazines. It never generates random death-tim
 
 If the recipient is at carry capacity, unaccepted rounds remain on the source actor.
 
+### Optical vision
+
+`UIGIVisionComponent` owns mutually-exclusive Normal, Binoculars, NightVision, and Thermal modes.
+Mode availability is inventory-gated by Binoculars, NightVisionGoggles, and ThermalViewer equipment.
+
+Binoculars override camera FOV and disable normal firearm operation while raised. Night vision and
+thermal can stay active during weapon use.
+
+Vision presentation is data/content-driven through optional Post Process materials. Thermal targets
+opt in through `UIGIThermalSignatureComponent`, which writes a dedicated Custom Stencil value.
+Enemy and canine IGI controllers automatically add that component to possessed pawns.
+
+`IGI Vision Equipment Pickup` provides world pickup support for all three devices.
+
+See [OPTICAL_VISION.md](OPTICAL_VISION.md).
+
 ### Difficulty-aware distraction
 
 Thrown distraction objects report semantic BDFR acoustic events with the thrown object as the
