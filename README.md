@@ -9,6 +9,7 @@
   <img alt="C++" src="https://img.shields.io/badge/C%2B%2B-Gameplay-00599C?logo=cplusplus&logoColor=white">
   <img alt="Platform" src="https://img.shields.io/badge/Platform-Windows%20x64-0078D6?logo=windows">
   <img alt="ALS" src="https://img.shields.io/badge/Locomotion-ALS%20Refactored-2ea44f">
+  <img alt="AI" src="https://img.shields.io/badge/AI-BDFR%20Interactive%20AI-7c3aed">
   <img alt="Status" src="https://img.shields.io/badge/Status-Work%20in%20Progress-orange">
 </p>
 
@@ -46,6 +47,11 @@ This keeps project-specific gameplay code out of the ALS plugin and makes future
 - [x] Third-person Spring Arm camera
 - [x] Walk / Run / Sprint / Crouch / Jump / Aim hooks
 - [x] Clean-rebuild utility for Windows
+- [x] BDFR Interactive AI integration
+- [x] Player footprint + scent emission
+- [x] Physical-surface-aware tracking strength
+- [x] Human footprint tracking controller
+- [x] Canine scent tracking controller
 - [ ] Weapon framework
 - [ ] ADS / hip-fire / recoil
 - [ ] Damage and hit reactions
@@ -67,7 +73,7 @@ This keeps project-specific gameplay code out of the ALS plugin and makes future
 
 ## Clone
 
-Because ALS is linked as a submodule, clone recursively:
+Because **ALS Refactored** and **BDFR Interactive AI** are linked as submodules, clone recursively:
 
 ```bash
 git clone --recurse-submodules https://github.com/lyingtiger88/ProjectIGI_Remake.git
@@ -122,7 +128,8 @@ It does **not** delete project source, configuration, or plugin source/content. 
 ProjectIGI_Remake/
 ├── Config/                         Unreal project configuration
 ├── Plugins/
-│   └── ALS/                       ALS Refactored submodule
+│   ├── ALS/                       ALS Refactored submodule
+│   └── BDFR_InteractiveAI/        Tactical AI / tracking submodule
 ├── Source/
 │   ├── ProjectIGI_Remake/
 │   │   ├── IGIPlayerCharacter.*   Project player character
@@ -134,6 +141,7 @@ ProjectIGI_Remake/
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── BUILD.md
+│   ├── TRACKING_SCENT.md
 │   └── ROADMAP.md
 └── ProjectIGI_Remake.uproject
 ```
@@ -155,7 +163,9 @@ The project intentionally separates locomotion from combat systems.
                          Weapons        Melee / Takedown
 ```
 
-ALS should remain responsible for **how the character moves**. Combat code should decide **what the character is doing**.
+ALS should remain responsible for **how the character moves**. Combat code decides **what the character is doing**, while BDFR owns reusable perception/awareness/tracking logic.
+
+The player now emits logical footprint and scent trails consumed by BDFR human and canine AI. See [docs/TRACKING_SCENT.md](docs/TRACKING_SCENT.md) for setup, tuning, Physical Material mapping, and Behavior Tree integration.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the intended gameplay-module boundaries.
 
@@ -198,6 +208,15 @@ Damage + Reactions
       ↓
 Stealth / AI
 ```
+
+## BDFR Interactive AI
+
+ProjectIGI uses **BDFR Interactive AI** as a separate plugin/submodule for reusable tactical AI systems, including awareness, difficulty, footprint tracking, canine scent tracking, acoustics, and indirect perception.
+
+Upstream project:
+https://github.com/lyingtiger88/BDFR_InteractiveAI
+
+Project-specific adapters stay in `ProjectIGI_Remake`; reusable tracking logic stays in the plugin.
 
 ## ALS Refactored
 
