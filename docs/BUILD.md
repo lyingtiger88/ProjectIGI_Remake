@@ -3,7 +3,7 @@
 ## Normal build
 
 1. Install Unreal Engine 5.8 and Visual Studio 2022.
-2. Make sure the ALS submodule exists:
+2. Make sure the ALS and BDFR AI submodules exist:
    ```bash
    git submodule update --init --recursive
    ```
@@ -47,7 +47,7 @@ The project player class is intended to refresh its ALS animation instance befor
 
 ## Rebuild order after plugin changes
 
-When ALS C++ source changes:
+When ALS or BDFR C++ source changes:
 
 1. close Unreal Editor,
 2. run the cleanup batch,
@@ -56,3 +56,18 @@ When ALS C++ source changes:
 5. launch the project.
 
 Avoid relying on Hot Reload for major engine/plugin class-layout changes.
+
+
+## BDFR tracking integration checks
+
+If footprint/scent code does not compile or run:
+
+- verify `Plugins/BDFR_InteractiveAI` is populated by Git submodules,
+- verify `BDFR_InteractiveAI` is enabled in `ProjectIGI_Remake.uproject`,
+- verify the game module depends on `BDFR_InteractiveAI`,
+- verify Physical Surfaces 1-8 are present in Project Settings -> Physics,
+- verify materials that need tracking use a Physical Material with the expected Surface Type,
+- regenerate Visual Studio project files after adding/updating the plugin.
+
+After pulling tracking changes, prefer a clean rebuild instead of Hot Reload because new reflected
+UCLASS/UActorComponent types and plugin module dependencies are involved.
