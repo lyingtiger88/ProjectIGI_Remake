@@ -15,6 +15,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Health/IGIHealthComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "Inventory/IGIInventoryComponent.h"
@@ -36,6 +37,7 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 	TrackingSurfaceComponent = CreateDefaultSubobject<UIGITrackingSurfaceComponent>(TEXT("IGITrackingSurface"));
 	CombatComponent = CreateDefaultSubobject<UIGICombatComponent>(TEXT("IGICombat"));
 	InventoryComponent = CreateDefaultSubobject<UIGIInventoryComponent>(TEXT("IGIInventory"));
+	HealthComponent = CreateDefaultSubobject<UIGIHealthComponent>(TEXT("IGIHealth"));
 	AcousticSignatureComponent = CreateDefaultSubobject<UIGIAcousticSignatureComponent>(TEXT("IGIAcousticSignature"));
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -230,6 +232,7 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindKey(EKeys::Four, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon04);
 	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ThisClass::Input_OnEquipKnife);
 	PlayerInputComponent->BindKey(EKeys::Q, IE_Pressed, this, &ThisClass::Input_OnSwitchShoulder);
+	PlayerInputComponent->BindKey(EKeys::H, IE_Pressed, this, &ThisClass::Input_OnUseMedKit);
 
 	// Temporary source-only prone roll controls until dedicated Enhanced Input assets are authored.
 	PlayerInputComponent->BindKey(EKeys::Z, IE_Pressed, this, &ThisClass::Input_OnProneRollLeft);
@@ -745,6 +748,51 @@ void AIGIPlayerCharacter::Input_OnProneRollLeft()
 void AIGIPlayerCharacter::Input_OnProneRollRight()
 {
 	StartProneRoll(EIGIProneRollDirection::Right);
+}
+
+void AIGIPlayerCharacter::Input_OnUseMedKit()
+{
+	UseMedKit();
+}
+
+bool AIGIPlayerCharacter::UseMedKit()
+{
+	if (bProneRolling ||
+		!IsValid(InventoryComponent) ||
+		!IsValid(HealthComponent) ||
+		!HealthComponent->IsAlive() ||
+		HealthComponent->IsFullHealth())
+	{
+		return false;
+	}
+
+	if (InventoryComponent->GetEquipmentCount(EIGIEquipmentType::MedKit) <= 0)
+	{
+		return false;
+	}
+
+	if (InventoryComponent->ConsumeEquipment(EIGIEquipmentType::MedKit, 1) != 1)
+	{
+		return false;
+	}
+
+	const float Healed = HealthComponent->Heal(MedKitHealAmount);
+	if (Healed <= KINDA_SMALL_NUMBER)
+	{
+		InventoryComponent->AddEquipment(EIGIEquipmentType::MedKit, 1);
+		return false;
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("IGI used Med Kit: +%.1f HP, health %.1f/%.1f, kits remaining=%d"),
+		Healed,
+		HealthComponent->GetHealth(),
+		HealthComponent->GetMaxHealth(),
+		InventoryComponent->GetEquipmentCount(EIGIEquipmentType::MedKit));
+
+	return true;
 }
 
 void AIGIPlayerCharacter::EquipInventorySlot(const EIGICarrySlot Slot)
