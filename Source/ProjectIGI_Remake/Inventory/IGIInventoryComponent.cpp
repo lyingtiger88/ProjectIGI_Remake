@@ -235,6 +235,92 @@ int32 UIGIInventoryComponent::GetAmmoCount(const FName AmmoType) const
     return Found != nullptr ? *Found : 0;
 }
 
+TArray<FName> UIGIInventoryComponent::GetAmmoTypes() const
+{
+    TArray<FName> Result;
+    AmmoPools.GetKeys(Result);
+    return Result;
+}
+
+TArray<AIGIWeaponBase*> UIGIInventoryComponent::GetStoredWeapons() const
+{
+    TArray<AIGIWeaponBase*> Result;
+    Result.Reserve(StoredWeapons.Num());
+
+    for (const TPair<EIGICarrySlot, TObjectPtr<AIGIWeaponBase>>& Pair : StoredWeapons)
+    {
+        if (IsValid(Pair.Value))
+        {
+            Result.Add(Pair.Value.Get());
+        }
+    }
+
+    return Result;
+}
+
+int32 UIGIInventoryComponent::GetAmmoCarryLimit(const FName AmmoType) const
+{
+    if (AmmoType.IsNone())
+    {
+        return 0;
+    }
+
+    int32 WeaponSpecificLimit = 0;
+
+    for (const TPair<EIGICarrySlot, TObjectPtr<AIGIWeaponBase>>& Pair : StoredWeapons)
+    {
+        const AIGIWeaponBase* Weapon = Pair.Value.Get();
+        const UIGIWeaponDataAsset* Data =
+            IsValid(Weapon) ? Weapon->GetWeaponData() : nullptr;
+
+        if (IsValid(Data) && Data->AmmoType == AmmoType)
+        {
+            WeaponSpecificLimit = FMath::Max(
+                WeaponSpecificLimit,
+                Data->MaxReserveAmmo);
+        }
+    }
+
+    return WeaponSpecificLimit > 0
+        ? WeaponSpecificLimit
+        : DefaultAmmoCarryLimitPerType;
+}
+
+int32 UIGIInventoryComponent::TransferReserveAmmoTo(
+    UIGIInventoryComponent* RecipientInventory,
+    const FName AmmoType,
+    const int32 MaxRounds)
+{
+    if (!IsValid(RecipientInventory) ||
+        RecipientInventory == this ||
+        AmmoType.IsNone())
+    {
+        return 0;
+    }
+
+    const int32 Available = GetAmmoCount(AmmoType);
+    if (Available <= 0)
+    {
+        return 0;
+    }
+
+    const int32 Requested =
+        MaxRounds < 0 ? Available : FMath::Min(Available, MaxRounds);
+
+    const int32 CarryLimit = RecipientInventory->GetAmmoCarryLimit(AmmoType);
+    const int32 Accepted = RecipientInventory->AddAmmo(
+        AmmoType,
+        Requested,
+        CarryLimit);
+
+    if (Accepted > 0)
+    {
+        ConsumeAmmo(AmmoType, Accepted);
+    }
+
+    return Accepted;
+}
+
 int32 UIGIInventoryComponent::AddEquipment(const EIGIEquipmentType EquipmentType, const int32 Amount)
 {
     if (Amount <= 0)
