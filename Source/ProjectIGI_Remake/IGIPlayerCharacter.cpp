@@ -13,6 +13,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "IndirectVisual/BDFRIndirectVisualSourceComponent.h"
 #include "Math/RotationMatrix.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
@@ -33,6 +34,9 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	IndirectVisualSourceComponent =
+		CreateDefaultSubobject<UBDFRIndirectVisualSourceComponent>(TEXT("BDFRIndirectVisualSource"));
 
 	static ConstructorHelpers::FObjectFinder<UAlsCharacterSettings> CharacterSettingsAsset(
 		TEXT("/ALS/ALS/Data/Character/CS_Als_Default.CS_Als_Default"));
