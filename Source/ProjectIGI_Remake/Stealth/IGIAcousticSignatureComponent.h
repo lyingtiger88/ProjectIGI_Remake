@@ -61,6 +61,9 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stealth|Acoustics", meta = (ClampMin = "0.0", ClampMax = "1.0"))
     float CrouchNoiseMultiplier = 0.50f;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stealth|Acoustics", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float ProneNoiseMultiplier = 0.28f;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stealth|Acoustics", meta = (ClampMin = "0.0"))
     float MinimumMovementSpeed = 20.0f;
 

@@ -3,6 +3,7 @@
 #include "Acoustics/BDFRAcousticEventLibrary.h"
 #include "AlsCharacter.h"
 #include "GameFramework/Actor.h"
+#include "IGIPlayerCharacter.h"
 #include "Inventory/IGIInventoryComponent.h"
 #include "Tracking/BDFRTrackingTypes.h"
 #include "Tracking/IGITrackingSurfaceComponent.h"
@@ -204,6 +205,12 @@ float UIGIAcousticSignatureComponent::GetMovementSpeedMultiplier() const
 
 float UIGIAcousticSignatureComponent::GetStanceMultiplier() const
 {
+    if (const AIGIPlayerCharacter* IGICharacter = Cast<AIGIPlayerCharacter>(GetOwner());
+        IsValid(IGICharacter) && IGICharacter->IsProne())
+    {
+        return ProneNoiseMultiplier;
+    }
+
     const AAlsCharacter* AlsCharacter = Cast<AAlsCharacter>(GetOwner());
     return IsValid(AlsCharacter) && AlsCharacter->GetStance() == AlsStanceTags::Crouching
         ? CrouchNoiseMultiplier

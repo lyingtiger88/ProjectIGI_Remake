@@ -4,6 +4,7 @@
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Combat/IGICombatComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
@@ -11,6 +12,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/World.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
@@ -28,6 +30,8 @@
 
 AIGIPlayerCharacter::AIGIPlayerCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	TrackEmitterComponent = CreateDefaultSubobject<UBDFRTrackEmitterComponent>(TEXT("BDFRTrackEmitter"));
 	TrackingSurfaceComponent = CreateDefaultSubobject<UIGITrackingSurfaceComponent>(TEXT("IGITrackingSurface"));
 	CombatComponent = CreateDefaultSubobject<UIGICombatComponent>(TEXT("IGICombat"));
@@ -36,8 +40,8 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
-	CameraBoom->TargetArmLength = 350.0f;
-	CameraBoom->SocketOffset = FVector(0.0f, 45.0f, 65.0f);
+	CameraBoom->TargetArmLength = HipCameraArmLength;
+	CameraBoom->SocketOffset = StandingCameraOffset;
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->CameraLagSpeed = 12.0f;
@@ -47,6 +51,7 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+	FollowCamera->FieldOfView = HipFieldOfView;
 
 	static ConstructorHelpers::FObjectFinder<UAlsCharacterSettings> CharacterSettingsAsset(
 		TEXT("/ALS/ALS/Data/Character/CS_Als_Default.CS_Als_Default"));
@@ -109,8 +114,29 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 void AIGIPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 	RefreshAlsAnimationInstance();
 	RefreshInputMappingContext();
+
+	if (IsValid(GetCapsuleComponent()))
+	{
+		StandingCapsuleHalfHeight = GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+	}
+
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement(); IsValid(Movement))
+	{
+		CrouchedCapsuleHalfHeight = Movement->GetCrouchedHalfHeight();
+	}
+
+	PlayerStance = GetStance() == AlsStanceTags::Crouching
+		? EIGIPlayerStance::Crouching
+		: EIGIPlayerStance::Standing;
+}
+
+void AIGIPlayerCharacter::Tick(const float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	RefreshCameraPresentation(DeltaSeconds);
 }
 
 void AIGIPlayerCharacter::PostInitializeComponents()
@@ -174,8 +200,16 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ThisClass::Input_OnSprint);
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Canceled, this, &ThisClass::Input_OnSprint);
 	}
-	if (IsValid(WalkAction)) { EnhancedInput->BindAction(WalkAction, ETriggerEvent::Triggered, this, &ThisClass::Input_OnWalk); }
-	if (IsValid(CrouchAction)) { EnhancedInput->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ThisClass::Input_OnCrouch); }
+	if (IsValid(WalkAction))
+	{
+		EnhancedInput->BindAction(WalkAction, ETriggerEvent::Triggered, this, &ThisClass::Input_OnWalk);
+	}
+	if (IsValid(CrouchAction))
+	{
+		EnhancedInput->BindAction(CrouchAction, ETriggerEvent::Started, this, &ThisClass::Input_OnStancePressed);
+		EnhancedInput->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ThisClass::Input_OnStanceReleased);
+		EnhancedInput->BindAction(CrouchAction, ETriggerEvent::Canceled, this, &ThisClass::Input_OnStanceReleased);
+	}
 	if (IsValid(JumpAction))
 	{
 		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ThisClass::Input_OnJump);
@@ -187,8 +221,6 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInput->BindAction(AimAction, ETriggerEvent::Canceled, this, &ThisClass::Input_OnAim);
 	}
 
-	// Prototype combat bindings are direct key bindings so the first weapon loop can be
-	// tested without committing binary Input Action assets to source control.
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &ThisClass::Input_OnFire);
 	PlayerInputComponent->BindKey(EKeys::R, IE_Pressed, this, &ThisClass::Input_OnReload);
 	PlayerInputComponent->BindKey(EKeys::One, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon01);
@@ -196,6 +228,7 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindKey(EKeys::Three, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon03);
 	PlayerInputComponent->BindKey(EKeys::Four, IE_Pressed, this, &ThisClass::Input_OnEquipWeapon04);
 	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ThisClass::Input_OnEquipKnife);
+	PlayerInputComponent->BindKey(EKeys::Q, IE_Pressed, this, &ThisClass::Input_OnSwitchShoulder);
 }
 
 void AIGIPlayerCharacter::Landed(const FHitResult& Hit)
@@ -212,6 +245,113 @@ void AIGIPlayerCharacter::Landed(const FHitResult& Hit)
 
 		AcousticSignatureComponent->ReportLanding(LandingIntensity);
 	}
+}
+
+float AIGIPlayerCharacter::GetProneMovementDirectionAngle() const
+{
+	if (!IsProne())
+	{
+		return 0.0f;
+	}
+
+	const FVector LocalVelocity = GetActorTransform().InverseTransformVectorNoScale(GetVelocity());
+	return FMath::RadiansToDegrees(FMath::Atan2(LocalVelocity.Y, LocalVelocity.X));
+}
+
+float AIGIPlayerCharacter::GetProneNormalizedSpeed() const
+{
+	if (!IsProne())
+	{
+		return 0.0f;
+	}
+
+	const FVector Velocity = GetVelocity();
+	const float PlanarSpeed = FVector(Velocity.X, Velocity.Y, 0.0f).Size();
+	const float ReferenceSpeed = 375.0f * FMath::Max(ProneMovementInputScale, 0.05f);
+	return FMath::Clamp(PlanarSpeed / ReferenceSpeed, 0.0f, 1.0f);
+}
+
+bool AIGIPlayerCharacter::SetPlayerStance(const EIGIPlayerStance NewStance)
+{
+	if (PlayerStance == NewStance)
+	{
+		return true;
+	}
+
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	UCapsuleComponent* Capsule = GetCapsuleComponent();
+
+	if (!IsValid(Movement) || !IsValid(Capsule) || !Movement->IsMovingOnGround())
+	{
+		return false;
+	}
+
+	const EIGIPlayerStance PreviousStance = PlayerStance;
+
+	switch (NewStance)
+	{
+		case EIGIPlayerStance::Standing:
+		{
+			if (!CanExpandCapsuleTo(StandingCapsuleHalfHeight))
+			{
+				return false;
+			}
+
+			Movement->SetCrouchedHalfHeight(CrouchedCapsuleHalfHeight);
+			SetDesiredStance(AlsStanceTags::Standing);
+			UnCrouch(false);
+			break;
+		}
+
+		case EIGIPlayerStance::Crouching:
+		{
+			Movement->SetCrouchedHalfHeight(CrouchedCapsuleHalfHeight);
+
+			if (PreviousStance == EIGIPlayerStance::Prone &&
+				!ResizeCapsuleKeepingFeet(CrouchedCapsuleHalfHeight))
+			{
+				Movement->SetCrouchedHalfHeight(ProneCapsuleHalfHeight);
+				return false;
+			}
+
+			SetDesiredStance(AlsStanceTags::Crouching);
+			Crouch(false);
+			break;
+		}
+
+		case EIGIPlayerStance::Prone:
+		{
+			if (GetCharacterMovement()->IsFalling())
+			{
+				return false;
+			}
+
+			Movement->SetCrouchedHalfHeight(ProneCapsuleHalfHeight);
+			SetDesiredStance(AlsStanceTags::Crouching);
+			Crouch(false);
+
+			if (!ResizeCapsuleKeepingFeet(ProneCapsuleHalfHeight))
+			{
+				Movement->SetCrouchedHalfHeight(CrouchedCapsuleHalfHeight);
+				return false;
+			}
+
+			SetDesiredGait(AlsGaitTags::Walking);
+			break;
+		}
+	}
+
+	PlayerStance = NewStance;
+	OnPlayerStanceChanged.Broadcast(PreviousStance, PlayerStance);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("IGI stance changed: %d -> %d"),
+		static_cast<int32>(PreviousStance),
+		static_cast<int32>(PlayerStance));
+
+	return true;
 }
 
 void AIGIPlayerCharacter::Input_OnLookMouse(const FInputActionValue& ActionValue)
@@ -231,53 +371,133 @@ void AIGIPlayerCharacter::Input_OnLook(const FInputActionValue& ActionValue)
 
 void AIGIPlayerCharacter::Input_OnMove(const FInputActionValue& ActionValue)
 {
-	if (!IsValid(GetController())) { return; }
-	const FVector2D Value = ActionValue.Get<FVector2D>();
+	if (!IsValid(GetController()))
+	{
+		return;
+	}
+
+	FVector2D Value = ActionValue.Get<FVector2D>();
+
+	if (IsProne())
+	{
+		Value *= ProneMovementInputScale;
+	}
+
 	const FRotator ControlRotation = GetController()->GetControlRotation();
 	const FRotator YawRotation(0.0, ControlRotation.Yaw, 0.0);
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-	AddMovementInput(ForwardDirection, Value.Y);
-	AddMovementInput(RightDirection, Value.X);
+
+	AddMovementInput(ForwardDirection * Value.Y + RightDirection * Value.X);
 }
 
 void AIGIPlayerCharacter::Input_OnSprint(const FInputActionValue& ActionValue)
 {
-	SetDesiredGait(ActionValue.Get<bool>() ? AlsGaitTags::Sprinting : AlsGaitTags::Running);
+	const bool bSprint = ActionValue.Get<bool>();
+
+	if (bSprint && PlayerStance != EIGIPlayerStance::Standing)
+	{
+		if (!SetPlayerStance(EIGIPlayerStance::Standing))
+		{
+			return;
+		}
+	}
+
+	SetDesiredGait(bSprint ? AlsGaitTags::Sprinting : AlsGaitTags::Running);
 }
 
 void AIGIPlayerCharacter::Input_OnWalk()
 {
+	if (IsProne())
+	{
+		SetDesiredGait(AlsGaitTags::Walking);
+		return;
+	}
+
 	SetDesiredGait(GetDesiredGait() == AlsGaitTags::Walking ? AlsGaitTags::Running : AlsGaitTags::Walking);
 }
 
-void AIGIPlayerCharacter::Input_OnCrouch()
+void AIGIPlayerCharacter::Input_OnStancePressed()
 {
-	SetDesiredStance(GetDesiredStance() == AlsStanceTags::Crouching ? AlsStanceTags::Standing : AlsStanceTags::Crouching);
+	bStanceHoldTriggered = false;
+
+	if (PlayerStance == EIGIPlayerStance::Prone)
+	{
+		bStanceHoldTriggered = true;
+		SetPlayerStance(EIGIPlayerStance::Crouching);
+		return;
+	}
+
+	if (UWorld* World = GetWorld(); IsValid(World))
+	{
+		World->GetTimerManager().SetTimer(
+			StanceHoldTimer,
+			this,
+			&ThisClass::TriggerProneFromStanceHold,
+			HoldCrouchToProneSeconds,
+			false);
+	}
+}
+
+void AIGIPlayerCharacter::Input_OnStanceReleased()
+{
+	if (UWorld* World = GetWorld(); IsValid(World))
+	{
+		World->GetTimerManager().ClearTimer(StanceHoldTimer);
+	}
+
+	if (bStanceHoldTriggered)
+	{
+		return;
+	}
+
+	if (PlayerStance == EIGIPlayerStance::Standing)
+	{
+		SetPlayerStance(EIGIPlayerStance::Crouching);
+	}
+	else if (PlayerStance == EIGIPlayerStance::Crouching)
+	{
+		SetPlayerStance(EIGIPlayerStance::Standing);
+	}
+}
+
+void AIGIPlayerCharacter::TriggerProneFromStanceHold()
+{
+	bStanceHoldTriggered = SetPlayerStance(EIGIPlayerStance::Prone);
 }
 
 void AIGIPlayerCharacter::Input_OnJump(const FInputActionValue& ActionValue)
 {
 	if (ActionValue.Get<bool>())
 	{
-		if (GetStance() == AlsStanceTags::Crouching)
+		if (PlayerStance == EIGIPlayerStance::Prone)
 		{
-			SetDesiredStance(AlsStanceTags::Standing);
+			SetPlayerStance(EIGIPlayerStance::Crouching);
 			return;
 		}
+
+		if (PlayerStance == EIGIPlayerStance::Crouching)
+		{
+			SetPlayerStance(EIGIPlayerStance::Standing);
+			return;
+		}
+
 		Jump();
 	}
-	else { StopJumping(); }
+	else
+	{
+		StopJumping();
+	}
 }
 
 void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 {
-	const bool bAim = ActionValue.Get<bool>();
-	SetDesiredAiming(bAim);
+	bAimInputHeld = ActionValue.Get<bool>();
+	SetDesiredAiming(bAimInputHeld);
 
 	if (IsValid(CombatComponent))
 	{
-		if (bAim)
+		if (bAimInputHeld)
 		{
 			CombatComponent->StartAim();
 		}
@@ -388,12 +608,157 @@ void AIGIPlayerCharacter::Input_OnEquipKnife()
 	EquipInventorySlot(EIGICarrySlot::Knife);
 }
 
+void AIGIPlayerCharacter::Input_OnSwitchShoulder()
+{
+	bRightShoulderCamera = !bRightShoulderCamera;
+}
+
 void AIGIPlayerCharacter::EquipInventorySlot(const EIGICarrySlot Slot)
 {
 	if (IsValid(InventoryComponent))
 	{
 		InventoryComponent->EquipWeaponInSlot(Slot);
 	}
+}
+
+bool AIGIPlayerCharacter::CanExpandCapsuleTo(const float TargetHalfHeight) const
+{
+	const UCapsuleComponent* Capsule = GetCapsuleComponent();
+	UWorld* World = GetWorld();
+
+	if (!IsValid(Capsule) || !IsValid(World))
+	{
+		return false;
+	}
+
+	const float CurrentHalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();
+
+	if (TargetHalfHeight <= CurrentHalfHeight + KINDA_SMALL_NUMBER)
+	{
+		return true;
+	}
+
+	const float Radius = Capsule->GetUnscaledCapsuleRadius();
+	const FVector TargetLocation =
+		GetActorLocation() + FVector::UpVector * (TargetHalfHeight - CurrentHalfHeight);
+
+	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(IGIStanceClearance), false, this);
+	QueryParams.AddIgnoredActor(this);
+
+	return !World->OverlapBlockingTestByChannel(
+		TargetLocation,
+		FQuat::Identity,
+		Capsule->GetCollisionObjectType(),
+		FCollisionShape::MakeCapsule(Radius, TargetHalfHeight),
+		QueryParams);
+}
+
+bool AIGIPlayerCharacter::ResizeCapsuleKeepingFeet(const float TargetHalfHeight)
+{
+	UCapsuleComponent* Capsule = GetCapsuleComponent();
+
+	if (!IsValid(Capsule))
+	{
+		return false;
+	}
+
+	const float CurrentHalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();
+
+	if (FMath::IsNearlyEqual(CurrentHalfHeight, TargetHalfHeight, 0.1f))
+	{
+		return true;
+	}
+
+	if (TargetHalfHeight > CurrentHalfHeight && !CanExpandCapsuleTo(TargetHalfHeight))
+	{
+		return false;
+	}
+
+	const float HeightDelta = TargetHalfHeight - CurrentHalfHeight;
+
+	if (HeightDelta > 0.0f)
+	{
+		SetActorLocation(GetActorLocation() + FVector::UpVector * HeightDelta, false);
+		Capsule->SetCapsuleHalfHeight(TargetHalfHeight, true);
+	}
+	else
+	{
+		Capsule->SetCapsuleHalfHeight(TargetHalfHeight, true);
+		SetActorLocation(GetActorLocation() + FVector::UpVector * HeightDelta, false);
+	}
+
+	return true;
+}
+
+void AIGIPlayerCharacter::RefreshCameraPresentation(const float DeltaSeconds)
+{
+	if (!IsValid(CameraBoom) || !IsValid(FollowCamera))
+	{
+		return;
+	}
+
+	FVector TargetOffset = GetTargetCameraOffset();
+	TargetOffset.Y = FMath::Abs(TargetOffset.Y) * (bRightShoulderCamera ? 1.0f : -1.0f);
+
+	CameraBoom->SocketOffset = FMath::VInterpTo(
+		CameraBoom->SocketOffset,
+		TargetOffset,
+		DeltaSeconds,
+		CameraTransitionSpeed);
+
+	CameraBoom->TargetArmLength = FMath::FInterpTo(
+		CameraBoom->TargetArmLength,
+		GetTargetCameraArmLength(),
+		DeltaSeconds,
+		CameraTransitionSpeed);
+
+	FollowCamera->FieldOfView = FMath::FInterpTo(
+		FollowCamera->FieldOfView,
+		GetTargetCameraFieldOfView(),
+		DeltaSeconds,
+		CameraTransitionSpeed);
+}
+
+FVector AIGIPlayerCharacter::GetTargetCameraOffset() const
+{
+	if (bAimInputHeld)
+	{
+		switch (PlayerStance)
+		{
+			case EIGIPlayerStance::Crouching: return CrouchingAimCameraOffset;
+			case EIGIPlayerStance::Prone: return ProneAimCameraOffset;
+			case EIGIPlayerStance::Standing:
+			default: return StandingAimCameraOffset;
+		}
+	}
+
+	switch (PlayerStance)
+	{
+		case EIGIPlayerStance::Crouching: return CrouchingCameraOffset;
+		case EIGIPlayerStance::Prone: return ProneCameraOffset;
+		case EIGIPlayerStance::Standing:
+		default: return StandingCameraOffset;
+	}
+}
+
+float AIGIPlayerCharacter::GetTargetCameraArmLength() const
+{
+	if (bAimInputHeld)
+	{
+		return IsProne() ? ProneAimCameraArmLength : AimCameraArmLength;
+	}
+
+	return IsProne() ? ProneHipCameraArmLength : HipCameraArmLength;
+}
+
+float AIGIPlayerCharacter::GetTargetCameraFieldOfView() const
+{
+	if (!bAimInputHeld)
+	{
+		return HipFieldOfView;
+	}
+
+	return IsProne() ? ProneAimFieldOfView : AimFieldOfView;
 }
 
 void AIGIPlayerCharacter::RefreshAlsAnimationInstance()
