@@ -4,6 +4,7 @@
 #include "AlsCharacter.h"
 #include "IGIPlayerCharacter.generated.h"
 
+class APlayerController;
 class UCameraComponent;
 class UBDFRTrackEmitterComponent;
 class UIGIAcousticSignatureComponent;
@@ -23,9 +24,11 @@ class PROJECTIGI_REMAKE_API AIGIPlayerCharacter : public AAlsCharacter
 public:
 	AIGIPlayerCharacter();
 
+	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void NotifyControllerChanged() override;
+	virtual void PawnClientRestart() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void Landed(const FHitResult& Hit) override;
 
@@ -105,4 +108,6 @@ protected:
 
 private:
 	void RefreshAlsAnimationInstance();
+	void RefreshInputMappingContext();
+	void RemoveInputMappingContext(APlayerController* PlayerController) const;
 };
