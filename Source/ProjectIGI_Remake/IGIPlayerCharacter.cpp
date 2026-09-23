@@ -3,6 +3,7 @@
 #include "AlsAnimationInstance.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Combat/IGICombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -13,17 +14,22 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
-#include "Tracking/BDFRTrackEmitterComponent.h"
-#include "Tracking/IGITrackingSurfaceComponent.h"
+#include "Inventory/IGIInventoryComponent.h"
 #include "Math/RotationMatrix.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
+#include "Stealth/IGIAcousticSignatureComponent.h"
+#include "Tracking/BDFRTrackEmitterComponent.h"
+#include "Tracking/IGITrackingSurfaceComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 AIGIPlayerCharacter::AIGIPlayerCharacter()
 {
 	TrackEmitterComponent = CreateDefaultSubobject<UBDFRTrackEmitterComponent>(TEXT("BDFRTrackEmitter"));
 	TrackingSurfaceComponent = CreateDefaultSubobject<UIGITrackingSurfaceComponent>(TEXT("IGITrackingSurface"));
+	CombatComponent = CreateDefaultSubobject<UIGICombatComponent>(TEXT("IGICombat"));
+	InventoryComponent = CreateDefaultSubobject<UIGIInventoryComponent>(TEXT("IGIInventory"));
+	AcousticSignatureComponent = CreateDefaultSubobject<UIGIAcousticSignatureComponent>(TEXT("IGIAcousticSignature"));
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
@@ -181,6 +187,22 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	}
 }
 
+void AIGIPlayerCharacter::Landed(const FHitResult& Hit)
+{
+	const float VerticalSpeed = FMath::Abs(GetVelocity().Z);
+	Super::Landed(Hit);
+
+	if (IsValid(AcousticSignatureComponent))
+	{
+		const float LandingIntensity = FMath::GetMappedRangeValueClamped(
+			FVector2D(150.0f, 900.0f),
+			FVector2D(0.55f, 1.75f),
+			VerticalSpeed);
+
+		AcousticSignatureComponent->ReportLanding(LandingIntensity);
+	}
+}
+
 void AIGIPlayerCharacter::Input_OnLookMouse(const FInputActionValue& ActionValue)
 {
 	const FVector2D Value = ActionValue.Get<FVector2D>();
@@ -239,7 +261,20 @@ void AIGIPlayerCharacter::Input_OnJump(const FInputActionValue& ActionValue)
 
 void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 {
-	SetDesiredAiming(ActionValue.Get<bool>());
+	const bool bAim = ActionValue.Get<bool>();
+	SetDesiredAiming(bAim);
+
+	if (IsValid(CombatComponent))
+	{
+		if (bAim)
+		{
+			CombatComponent->StartAim();
+		}
+		else
+		{
+			CombatComponent->StopAim();
+		}
+	}
 }
 
 void AIGIPlayerCharacter::RefreshAlsAnimationInstance()

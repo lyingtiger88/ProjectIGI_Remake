@@ -6,6 +6,9 @@
 
 class UCameraComponent;
 class UBDFRTrackEmitterComponent;
+class UIGIAcousticSignatureComponent;
+class UIGICombatComponent;
+class UIGIInventoryComponent;
 class UIGITrackingSurfaceComponent;
 class UInputAction;
 class UInputMappingContext;
@@ -24,12 +27,22 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void NotifyControllerChanged() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void Landed(const FHitResult& Hit) override;
 
 	UFUNCTION(BlueprintPure, Category = "IGI|Tracking")
 	UBDFRTrackEmitterComponent* GetTrackEmitterComponent() const { return TrackEmitterComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "IGI|Tracking")
 	UIGITrackingSurfaceComponent* GetTrackingSurfaceComponent() const { return TrackingSurfaceComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Combat")
+	UIGICombatComponent* GetCombatComponent() const { return CombatComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Inventory")
+	UIGIInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stealth")
+	UIGIAcousticSignatureComponent* GetAcousticSignatureComponent() const { return AcousticSignatureComponent; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
@@ -43,6 +56,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Tracking")
 	TObjectPtr<UIGITrackingSurfaceComponent> TrackingSurfaceComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Combat")
+	TObjectPtr<UIGICombatComponent> CombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Inventory")
+	TObjectPtr<UIGIInventoryComponent> InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Stealth")
+	TObjectPtr<UIGIAcousticSignatureComponent> AcousticSignatureComponent;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "IGI|Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;

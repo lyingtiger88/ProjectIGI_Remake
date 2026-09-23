@@ -2,7 +2,7 @@
 
 ## Goals
 
-The project is structured to keep locomotion, ranged combat, melee/CQC, and game-state logic independent enough to evolve without rewriting the player character.
+The project keeps locomotion, combat, inventory, stealth/perception, and future CQC logic separated so each system can evolve without rewriting the player character or ALS.
 
 ## Character inheritance
 
@@ -14,54 +14,104 @@ AAlsCharacter
 
 `AAlsCharacter` provides locomotion behavior.
 
-`AIGIPlayerCharacter` is the project-owned integration layer. It is the correct place for project camera/input wiring and high-level gameplay components.
+`AIGIPlayerCharacter` is the project-owned integration layer. It owns high-level gameplay components and project camera/input wiring.
 
-The Blueprint layer should primarily configure assets, tune values, and connect content-specific behavior.
+The Blueprint layer should primarily configure content, tune Data Assets, and connect animation/presentation behavior.
 
-## Planned gameplay boundaries
+## Runtime gameplay components
 
 ```text
 AIGIPlayerCharacter
-├── Locomotion / ALS
-├── Camera
-├── Input
-├── Combat Coordinator
-│   ├── Weapon / Ranged
-│   └── Melee / CQC
-├── Health / Damage
-├── Interaction
-└── Stealth / Awareness
-    ├── BDFR track emitter
-    ├── Physical-surface resolver
-    ├── Human footprint tracking
-    └── Canine scent tracking
+├── ALS locomotion
+├── Camera / Enhanced Input
+├── UIGICombatComponent
+├── UIGIInventoryComponent
+├── UIGIAcousticSignatureComponent
+├── UBDFRTrackEmitterComponent
+└── UIGITrackingSurfaceComponent
 ```
 
-### Locomotion
+### Combat coordinator
 
-Responsibilities:
+`UIGICombatComponent` owns high-level combat state:
 
-- gait,
-- stance,
-- rotation mode,
-- movement state,
-- locomotion animation,
-- aim locomotion state.
+```text
+Unarmed
+Armed
+Aiming
+Firing
+Reloading
+Melee
+Takedown
+```
 
-ALS should not need to understand individual weapons or combo attacks.
+It tracks the active weapon and aim/reload state without moving firearm implementation into ALS.
 
 ### Weapon system
 
-Planned responsibilities:
+```text
+AIGIWeaponBase
+    └── AIGIFirearmBase
 
-- weapon ownership/equip state,
-- fire mode,
-- ammo,
-- reload,
-- ADS,
-- recoil,
-- traces/projectiles,
-- weapon-specific animation requests.
+UIGIWeaponDataAsset
+UIGIWeaponAttachmentComponent
+UIGIWeaponAttachmentDataAsset
+```
+
+Responsibilities:
+
+- data-driven weapon identity/family/handling,
+- magazine and reserve-ammo interaction,
+- fire modes,
+- physical equip/holster sockets,
+- weapon weight and carry-noise contribution,
+- attachment compatibility,
+- attachment visual meshes,
+- recoil/spread/handling modifiers,
+- suppressor state,
+- weapon acoustic events.
+
+Individual weapon models should normally be Data Assets rather than one C++ subclass per model. New C++ subclasses are justified only when behavior materially differs.
+
+See [WEAPONS_INVENTORY_ATTACHMENTS.md](WEAPONS_INVENTORY_ATTACHMENTS.md).
+
+### Inventory and physical carry model
+
+`UIGIInventoryComponent` is a tactical loadout, not an unlimited backpack.
+
+It provides four physical weapon slots, a dedicated knife slot, ammo pools, grenade limits, and a shared utility-explosive limit.
+
+```text
+SCK_Weapon_Back_01
+SCK_Weapon_Back_02
+SCK_Weapon_Hip_R
+SCK_Weapon_Special
+SCK_Knife
+SCK_Grenade_Frag
+SCK_Grenade_Flash
+SCK_Grenade_Smoke
+SCK_Utility_Explosive
+```
+
+Weapon Data Assets define compatible carry slots, so body/socket compatibility is part of weapon configuration.
+
+### Acoustic stealth
+
+`UIGIAcousticSignatureComponent` combines movement and loadout into a BDFR hearing signature.
+
+```text
+Movement speed
+x stance
+x physical surface
+x carried weapon/equipment load
+= AI-hearable movement signature
+```
+
+The component reports footsteps, gear rattle, landing, and vault events. Weapons report equip, reload, attachment handling, and gunshots.
+
+Suppressors reduce gunshot hearing range/strength and muzzle flash but do not make the player silent.
+
+See [ACOUSTIC_STEALTH.md](ACOUSTIC_STEALTH.md).
 
 ### Melee / CQC
 
@@ -87,34 +137,31 @@ Planned responsibilities:
 
 ## Design rule
 
-Prefer communication through components, gameplay tags, interfaces, or well-defined events rather than adding weapon/CQC knowledge directly to ALS classes.
+Prefer communication through components, gameplay tags, Data Assets, interfaces, and well-defined events instead of adding weapon/CQC knowledge directly to ALS classes.
 
-That separation makes it easier to update ALS and keeps combat code reusable.
+## BDFR stealth/perception boundary
 
-
-## Tracking / stealth boundary
-
-ProjectIGI owns the integration layer while BDFR owns the reusable tracking engine.
+ProjectIGI owns game-specific emitters/adapters while BDFR owns reusable perception, awareness, tracking, and acoustics.
 
 ```text
-ProjectIGI                           BDFR Interactive AI
------------                          -------------------
-AIGIPlayerCharacter             ->  UBDFRTrackEmitterComponent
-UIGITrackingSurfaceComponent    ->  EBDFRTrackSurfaceType
-AIGIEnemyAIController           ->  UBDFRFootprintTrackingComponent
-AIGIDogAIController             ->  UBDFRCanineTrackingComponent
-                                      |
-                                      v
-                              UBDFRTrackingWorldSubsystem
+ProjectIGI                              BDFR Interactive AI
+-----------                             -------------------
+AIGIPlayerCharacter                ->  UBDFRTrackEmitterComponent
+UIGITrackingSurfaceComponent       ->  EBDFRTrackSurfaceType
+UIGIAcousticSignatureComponent     ->  UBDFRAcousticEventLibrary
+AIGIWeaponBase                     ->  UBDFRAcousticEventLibrary
+AIGIEnemyAIController              ->  ABDFRAIController
+AIGIDogAIController                ->  ABDFRCanineAIController
+                                          |
+                     +--------------------+--------------------+
+                     v                                         v
+           UBDFRTrackingWorldSubsystem                  UAISense_Hearing
 ```
 
-The player emits lightweight logical track samples. No footprint Actor is spawned per step.
-The world subsystem stores the samples, and AI tracking components query them.
+The player emits lightweight footprint/scent samples and semantic hearing events.
 
-ProjectIGI maps Unreal Physical Surfaces to BDFR surface categories so mud, snow, grass,
-concrete, metal, and water affect footprint/scent strength without coupling BDFR to project assets.
+Physical surfaces are shared context: mud, snow, grass, concrete, metal, water, and other mapped surfaces can influence both tracking and movement acoustics.
 
-Visible footprint decals are presentation only and should subscribe to the emitter event rather
-than becoming the source of AI tracking truth.
+Normal movement/gear events affect AI hearing/awareness but do not apply physical acoustic exposure. Gunshots/explosions retain BDFR's hearing-exposure behavior.
 
-See [TRACKING_SCENT.md](TRACKING_SCENT.md) for the full integration contract and tuning.
+See [TRACKING_SCENT.md](TRACKING_SCENT.md) for footprint/scent integration.

@@ -12,26 +12,34 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] final player Blueprint/content wiring
 - [ ] locomotion regression test map
 
-## Milestone 2 — Weapon core
+## Milestone 2 — Weapon / inventory core
 
-- [ ] weapon base class
-- [ ] equip / unequip
-- [ ] weapon sockets
-- [ ] ammo model
-- [ ] fire modes
-- [ ] reload state
-- [ ] data-driven weapon configuration
+- [x] combat coordinator/state component
+- [x] weapon base actor
+- [x] firearm magazine model
+- [x] reserve-ammo inventory pools
+- [x] fire-mode data and runtime selection
+- [x] four physical weapon carry slots + knife slot
+- [x] grenade / utility explosive carry limits
+- [x] data-driven weapon configuration
+- [x] attachment Data Assets and compatibility
+- [x] suppressor-aware acoustic modifiers
+- [x] attachment visual socket spawning
+- [ ] pickup / swap / drop interaction presentation
+- [ ] final weapon Data Assets for the catalog
+- [ ] final player/weapon skeletal sockets and meshes
 
 ## Milestone 3 — Third-person shooting
 
 - [ ] hip fire
-- [ ] ADS
-- [ ] camera/weapon alignment
-- [ ] recoil
-- [ ] spread
-- [ ] hit detection
+- [ ] ADS camera/weapon alignment
+- [ ] recoil application
+- [ ] spread application
+- [ ] hitscan/projectile implementation
 - [ ] impact feedback
+- [ ] muzzle flash presentation
 - [ ] upper-body animation layer
+- [ ] reload animation/montage integration
 
 ## Milestone 4 — Melee / CQC
 
@@ -60,6 +68,13 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [x] difficulty-gated human footprint tracking
 - [x] canine scent tracking controller
 - [x] base sight/hearing/damage perception via BDFR
+- [x] movement footstep acoustic events
+- [x] carried-gear/load acoustic multiplier
+- [x] weapon equip/reload/attachment acoustic events
+- [x] suppressed gunshot integration
+- [x] landing acoustic event
+- [ ] precise animation-notify footstep timing
+- [ ] vault/mantle acoustic hook
 - [ ] visible footprint decals / presentation
 - [ ] Behavior Tree tasks for trail navigation
 - [ ] suspicion/alert game-state integration
@@ -72,7 +87,9 @@ This roadmap is intentionally implementation-focused and may change as prototype
 
 - [ ] interaction framework
 - [ ] mission objectives
-- [ ] inventory/equipment
+- [x] inventory/equipment foundation
+- [ ] smoke air-support / rescue mission hooks
+- [ ] C4 / Claymore placement and detonation behavior
 - [ ] checkpoints/save data
 - [ ] UI/HUD
 - [ ] polish and optimization
