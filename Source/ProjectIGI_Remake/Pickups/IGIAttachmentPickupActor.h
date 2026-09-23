@@ -28,10 +28,18 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup")
     TObjectPtr<UIGIWeaponAttachmentDataAsset> AttachmentData;
 
+    // Creates a stat-only pistol suppressor at runtime when no binary attachment asset
+    // has been authored yet. The production path remains AttachmentData.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype")
+    bool bUsePrototypePistolSuppressor = false;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup")
     bool bReplaceExistingAttachment = true;
 
 private:
+    UPROPERTY(Transient)
+    TObjectPtr<UIGIWeaponAttachmentDataAsset> RuntimePrototypeAttachment;
+
     UFUNCTION()
     void HandlePickupOverlap(
         UPrimitiveComponent* OverlappedComponent,
@@ -42,4 +50,6 @@ private:
         const FHitResult& SweepResult);
 
     bool TryInstallOnActiveWeapon(AActor* OtherActor);
+    UIGIWeaponAttachmentDataAsset* ResolveAttachmentData();
+    UIGIWeaponAttachmentDataAsset* CreatePrototypePistolSuppressor();
 };
