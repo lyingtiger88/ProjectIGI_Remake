@@ -108,5 +108,7 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [x] flare air-support / rescue signal hook foundation
 - [ ] C4 / Claymore placement and detonation behavior
 - [ ] checkpoints/save data
+- [x] binocular / night-vision / thermal vision foundation
+- [ ] optical-device animations and final post-process materials
 - [ ] UI/HUD
 - [ ] polish and optimization
