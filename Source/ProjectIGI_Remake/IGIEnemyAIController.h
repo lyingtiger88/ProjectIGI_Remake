@@ -11,4 +11,5 @@ class PROJECTIGI_REMAKE_API AIGIEnemyAIController : public ABDFRAIController
 
 protected:
 	virtual bool BDFR_ShouldProcessPerceivedActor_Implementation(AActor* SourceActor) const override;
+	virtual bool BDFR_ShouldRespondToDistress_Implementation(AActor* SourceActor) const override;
 };
