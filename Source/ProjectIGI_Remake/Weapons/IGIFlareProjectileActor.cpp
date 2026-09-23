@@ -4,6 +4,7 @@
 #include "Components/PointLightComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Environment/IGIFlareSignalWorldSubsystem.h"
 #include "Environment/IGIWeatherWorldSubsystem.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraComponent.h"
@@ -92,6 +93,25 @@ void AIGIFlareProjectileActor::InitializeFlare(
 {
     FlarePurpose = InPurpose;
 
+    if (IsValid(FlareLight))
+    {
+        switch (FlarePurpose)
+        {
+            case EIGIFlarePurpose::AirSupportMarker:
+                FlareLight->SetLightColor(FLinearColor(1.0f, 0.05f, 0.02f));
+                break;
+
+            case EIGIFlarePurpose::RescueExtraction:
+                FlareLight->SetLightColor(FLinearColor(1.0f, 0.20f, 0.02f));
+                break;
+
+            case EIGIFlarePurpose::Illumination:
+            default:
+                FlareLight->SetLightColor(FLinearColor(1.0f, 0.72f, 0.38f));
+                break;
+        }
+    }
+
     if (IsValid(CollisionSphere) && IsValid(GetOwner()))
     {
         CollisionSphere->IgnoreActorWhenMoving(GetOwner(), true);
@@ -149,6 +169,16 @@ void AIGIFlareProjectileActor::ActivateSignal(const FVector& Location)
     }
 
     OnFlareActivated.Broadcast(this, FlarePurpose, Location);
+
+    if (UWorld* World = GetWorld(); IsValid(World))
+    {
+        if (UIGIFlareSignalWorldSubsystem* Signals =
+                World->GetSubsystem<UIGIFlareSignalWorldSubsystem>();
+            IsValid(Signals))
+        {
+            Signals->ReportFlareSignal(this, FlarePurpose, Location);
+        }
+    }
 
     UBDFRAcousticEventLibrary::ReportAcousticEvent(
         this,
