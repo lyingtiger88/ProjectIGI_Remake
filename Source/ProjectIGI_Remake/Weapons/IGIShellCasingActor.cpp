@@ -46,6 +46,12 @@ void AIGIShellCasingActor::Tick(const float DeltaSeconds)
         return;
     }
 
+    if (!CasingMesh->RigidBodyIsAwake(NAME_None))
+    {
+        SetActorTickEnabled(false);
+        return;
+    }
+
     UWorld* World = GetWorld();
     if (!IsValid(World))
     {
