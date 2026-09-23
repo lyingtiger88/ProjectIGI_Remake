@@ -26,6 +26,22 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	EIGIPlayerStance,
 	NewStance);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FIGIProneOrientationChangedSignature,
+	EIGIProneOrientation,
+	PreviousOrientation,
+	EIGIProneOrientation,
+	NewOrientation);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+	FIGIProneRollStartedSignature,
+	EIGIProneRollDirection,
+	Direction,
+	EIGIProneOrientation,
+	FromOrientation,
+	EIGIProneOrientation,
+	ToOrientation);
+
 UCLASS()
 class PROJECTIGI_REMAKE_API AIGIPlayerCharacter : public AAlsCharacter
 {
@@ -73,6 +89,30 @@ public:
 	UFUNCTION(BlueprintPure, Category = "IGI|Stance")
 	float GetProneNormalizedSpeed() const;
 
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	EIGIProneOrientation GetProneOrientation() const { return ProneOrientation; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	bool IsProneSupine() const { return IsProne() && ProneOrientation == EIGIProneOrientation::Supine; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	bool IsProneRolling() const { return bProneRolling; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	EIGIProneRollDirection GetProneRollDirection() const { return ProneRollDirection; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	float GetProneRollAlpha() const;
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	float GetProneAimYawAngle() const;
+
+	UFUNCTION(BlueprintPure, Category = "IGI|Stance|Prone")
+	float GetProneAimPitchAngle() const;
+
+	UFUNCTION(BlueprintCallable, Category = "IGI|Stance|Prone")
+	bool StartProneRoll(EIGIProneRollDirection Direction);
+
 	UFUNCTION(BlueprintCallable, Category = "IGI|Stance")
 	bool SetPlayerStance(EIGIPlayerStance NewStance);
 
@@ -81,6 +121,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "IGI|Stance")
 	FIGIPlayerStanceChangedSignature OnPlayerStanceChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "IGI|Stance|Prone")
+	FIGIProneOrientationChangedSignature OnProneOrientationChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "IGI|Stance|Prone")
+	FIGIProneRollStartedSignature OnProneRollStarted;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
@@ -143,6 +189,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stance", meta = (ClampMin = "0.05", ClampMax = "1.0"))
 	float ProneMovementInputScale = 0.36f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stance|Prone", meta = (ClampMin = "0.05", ClampMax = "1.0"))
+	float SupineMovementInputScale = 0.24f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stance|Prone", meta = (ClampMin = "0.1", ClampMax = "1.5"))
+	float ProneRollDuration = 0.42f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Stance|Prone", meta = (ClampMin = "0.0", ForceUnits = "cm"))
+	float ProneRollDistance = 72.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	float CameraTransitionSpeed = 10.0f;
 
@@ -155,6 +210,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	FVector ProneCameraOffset = FVector(0.0f, 38.0f, 19.0f);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
+	FVector ProneSupineCameraOffset = FVector(0.0f, 34.0f, 21.0f);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
 	FVector StandingAimCameraOffset = FVector(0.0f, 60.0f, 61.0f);
 
@@ -164,17 +222,26 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
 	FVector ProneAimCameraOffset = FVector(0.0f, 48.0f, 16.0f);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
+	FVector ProneSupineAimCameraOffset = FVector(0.0f, 46.0f, 23.0f);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	float HipCameraArmLength = 350.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	float ProneHipCameraArmLength = 300.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
+	float ProneSupineHipCameraArmLength = 285.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
 	float AimCameraArmLength = 225.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
 	float ProneAimCameraArmLength = 190.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
+	float ProneSupineAimCameraArmLength = 178.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera")
 	float HipFieldOfView = 90.0f;
@@ -184,6 +251,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
 	float ProneAimFieldOfView = 72.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Camera|Aim")
+	float ProneSupineAimFieldOfView = 70.0f;
 
 protected:
 	void Input_OnLookMouse(const FInputActionValue& ActionValue);
@@ -203,21 +273,39 @@ protected:
 	void Input_OnEquipWeapon04();
 	void Input_OnEquipKnife();
 	void Input_OnSwitchShoulder();
+	void Input_OnProneRollLeft();
+	void Input_OnProneRollRight();
 
 private:
 	UPROPERTY(Transient)
 	EIGIPlayerStance PlayerStance = EIGIPlayerStance::Standing;
+
+	UPROPERTY(Transient)
+	EIGIProneOrientation ProneOrientation = EIGIProneOrientation::ChestDown;
+
+	UPROPERTY(Transient)
+	EIGIProneRollDirection ProneRollDirection = EIGIProneRollDirection::Right;
+
+	UPROPERTY(Transient)
+	bool bProneRolling = false;
 
 	bool bAimInputHeld = false;
 	bool bRightShoulderCamera = true;
 	bool bStanceHoldTriggered = false;
 
 	float StandingCapsuleHalfHeight = 88.0f;
+	float ProneRollElapsed = 0.0f;
+
+	EIGIProneOrientation ProneRollTargetOrientation = EIGIProneOrientation::ChestDown;
+	FVector ProneRollWorldDirection = FVector::ZeroVector;
 
 	FTimerHandle StanceHoldTimer;
 
 	void EquipInventorySlot(EIGICarrySlot Slot);
 	void TriggerProneFromStanceHold();
+	void UpdateProneRoll(float DeltaSeconds);
+	void FinishProneRoll();
+	void SetProneOrientation(EIGIProneOrientation NewOrientation);
 	bool CanExpandCapsuleTo(float TargetHalfHeight) const;
 	bool ResizeCapsuleKeepingFeet(float TargetHalfHeight);
 	void RefreshCameraPresentation(float DeltaSeconds);
