@@ -148,6 +148,7 @@ UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateGlock17PrototypeData()
 
     Data->WeaponId = EIGIWeaponId::Glock17;
     Data->DisplayName = FText::FromString(TEXT("Glock 17"));
+    Data->WeaponMesh = PrototypeWeaponMesh;
     Data->WeaponFamily = EIGIWeaponFamily::Pistol;
     Data->HandlingProfile = EIGIHandlingProfile::Pistol;
     Data->CompatibleCarrySlots = {
