@@ -52,8 +52,11 @@ The player character owns:
 - stance-aware camera offsets and FOV,
 - right/left shoulder camera switching,
 - slower camera-relative prone movement,
+- chest-down and supine prone orientation,
+- left/right prone rolling between chest-down and supine,
+- aiming/firing while supine/on the back,
 - aiming without forcing a stance change,
-- Blueprint-facing prone animation state.
+- Blueprint-facing prone orientation/roll/aim animation state.
 
 Dedicated prone animation assets remain project-owned presentation content rather than an ALS plugin modification.
 

@@ -174,6 +174,27 @@ void UIGIAcousticSignatureComponent::ReportVault(const float Intensity)
         TEXT("BDFR.Acoustic.Movement.Vault"));
 }
 
+void UIGIAcousticSignatureComponent::ReportProneRoll(const float Intensity)
+{
+    AActor* Owner = GetOwner();
+    if (!IsValid(Owner))
+    {
+        return;
+    }
+
+    const float CombinedMultiplier =
+        GetCurrentLoadNoiseMultiplier() *
+        FMath::Max(0.0f, Intensity);
+
+    UBDFRAcousticEventLibrary::ReportAcousticEvent(
+        this,
+        Owner,
+        Owner->GetActorLocation(),
+        FMath::Clamp(0.16f * CombinedMultiplier, 0.05f, 0.70f),
+        900.0f * CombinedMultiplier,
+        TEXT("BDFR.Acoustic.Movement.ProneRoll"));
+}
+
 float UIGIAcousticSignatureComponent::GetCurrentLoadNoiseMultiplier() const
 {
     return IsValid(InventoryComponent)

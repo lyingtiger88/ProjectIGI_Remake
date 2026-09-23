@@ -41,6 +41,7 @@ BDFR.Acoustic.Movement.Footstep
 BDFR.Acoustic.Movement.Gear
 BDFR.Acoustic.Movement.Landing
 BDFR.Acoustic.Movement.Vault
+BDFR.Acoustic.Movement.ProneRoll
 
 BDFR.Acoustic.Weapon.Equip
 BDFR.Acoustic.Weapon.Reload
@@ -136,3 +137,9 @@ Important project-level tuning points:
 - suppressor `GunshotNoiseMultiplier`
 
 Automatic footsteps can later be disabled in favor of precise animation-notify-driven calls without changing the BDFR integration.
+
+
+## Prone rolling
+
+Prone left/right rolls emit `BDFR.Acoustic.Movement.ProneRoll`. The event is intentionally modest,
+but its range/loudness still scales with the player's current carried-load multiplier.

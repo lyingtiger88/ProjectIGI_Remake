@@ -14,7 +14,10 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [x] stance-preserving aim behavior
 - [x] stance-aware shoulder camera and FOV transitions
 - [x] prone movement/noise gameplay behavior
-- [ ] dedicated prone animation set and animation layer
+- [x] prone left/right roll gameplay state
+- [x] chest-down / supine orientation state
+- [x] supine/on-back aiming camera and firearm path
+- [ ] dedicated prone/supine animation set and animation layer
 - [ ] final player Blueprint/content wiring
 - [ ] locomotion regression test map
 

@@ -47,12 +47,34 @@ Aim input never forces the player back to standing.
 ```text
 Standing + Aim
 Crouching + Aim
-Prone + Aim
+Prone chest-down + Aim
+Prone supine/on-back + Aim
 ```
 
 all remain valid combinations.
 
-`IsProneAiming()` is exposed to Blueprint/animation code for a dedicated prone-aim pose or state machine.
+The prone system tracks a separate orientation:
+
+```text
+ChestDown
+Supine
+```
+
+Rolling while prone toggles between these orientations, allowing the animation layer to reproduce
+the MGSV-style behavior where the character can roll onto the back and continue aiming/firing.
+
+Animation-facing helpers:
+
+```text
+IsProneAiming()
+GetProneOrientation()
+IsProneSupine()
+GetProneAimYawAngle()
+GetProneAimPitchAngle()
+```
+
+The actual firearm trace remains camera/controller-directed, so supine aiming still fires toward the
+crosshair once the corresponding animation/weapon pose is authored.
 
 ## Camera behavior
 
@@ -68,6 +90,9 @@ The spring-arm camera interpolates between stance-aware third-person targets:
 Aiming moves the camera closer over the shoulder and narrows field of view.
 
 Pressing `Q` swaps right/left shoulder. The shoulder swap works in all three stances and while aiming.
+
+Supine prone has its own hip and aim camera offsets/arm lengths so lying on the back does not reuse
+the chest-down camera blindly.
 
 Important tunables on `AIGIPlayerCharacter`:
 
@@ -110,13 +135,57 @@ Before expanding from prone to crouch or standing, a capsule overlap test checks
 
 Prone movement uses normal camera-relative movement input but scales the input magnitude.
 
-Default:
+Defaults:
 
 ```text
-ProneMovementInputScale = 0.36
+ProneMovementInputScale  = 0.36
+SupineMovementInputScale = 0.24
 ```
 
-This keeps the existing ALS movement component while making crawling much slower than crouched/standing movement.
+Chest-down crawling is slow; supine movement is slower still. This keeps the existing ALS movement
+component while allowing the animation layer to distinguish crawl movement from on-back repositioning.
+
+## Prone roll
+
+Prone rolling is a separate gameplay state. It does not invoke ALS's standing/crouched combat roll.
+
+Temporary source-only test controls:
+
+```text
+Z = roll left
+X = roll right
+```
+
+Each completed prone roll toggles orientation:
+
+```text
+ChestDown -> Supine
+Supine    -> ChestDown
+```
+
+The roll performs a short swept lateral displacement and blocks normal movement, firing, reload,
+jump/stance changes until it completes.
+
+Default tuning:
+
+```text
+ProneRollDuration = 0.42 s
+ProneRollDistance = 72 cm
+```
+
+Animation-facing state:
+
+```text
+IsProneRolling()
+GetProneRollDirection()
+GetProneRollAlpha()
+OnProneRollStarted
+OnProneOrientationChanged
+```
+
+The production animation layer should use those values for left/right roll montages or a dedicated
+prone-roll state. Once root-motion prone roll animations exist, the temporary code-driven displacement
+can be replaced by root motion without changing the public stance API.
 
 Animation-friendly values exposed by the player:
 
@@ -126,7 +195,16 @@ IsProne()
 IsProneAiming()
 GetProneMovementDirectionAngle()
 GetProneNormalizedSpeed()
+GetProneOrientation()
+IsProneSupine()
+IsProneRolling()
+GetProneRollDirection()
+GetProneRollAlpha()
+GetProneAimYawAngle()
+GetProneAimPitchAngle()
 OnPlayerStanceChanged
+OnProneOrientationChanged
+OnProneRollStarted
 ```
 
 These are intended for the future prone animation layer.
@@ -148,8 +226,14 @@ The production animation layer should add:
 - prone turn,
 - prone aim idle,
 - prone aim locomotion,
-- prone firearm recoil,
-- prone reload variants where required.
+- prone roll left/right,
+- chest-down to supine transition,
+- supine idle,
+- supine aim idle,
+- supine aim yaw/pitch poses,
+- supine repositioning locomotion,
+- prone/supine firearm recoil,
+- prone/supine reload variants where required.
 
 Do not modify the upstream ALS plugin for these animations; use a ProjectIGI-owned linked/layered animation setup.
 
@@ -168,3 +252,15 @@ Prone    = 0.28
 The stance multiplier is still combined with movement speed, surface type, and carried equipment load.
 
 This means crawling slowly on grass with a light load produces a much smaller AI-hearing signature than running upright on metal with a heavy load.
+
+
+## Prone roll acoustic signature
+
+Rolling on the ground creates a small BDFR hearing event:
+
+```text
+BDFR.Acoustic.Movement.ProneRoll
+```
+
+It is quieter than normal upright movement but still scales with carried load, so rolling with heavy
+weapons and equipment is more audible than rolling with a light stealth loadout.
