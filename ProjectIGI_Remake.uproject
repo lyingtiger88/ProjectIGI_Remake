@@ -21,6 +21,10 @@
 		{
 			"Name": "ALS",
 			"Enabled": true
+		},
+		{
+			"Name": "BDFR_InteractiveAI",
+			"Enabled": true
 		}
 	]
 }
