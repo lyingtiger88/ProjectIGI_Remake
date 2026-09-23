@@ -92,6 +92,7 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] Behavior Tree tasks for trail navigation
 - [ ] suspicion/alert game-state integration
 - [ ] cover behavior
+- [x] difficulty-aware throwable distraction foundation
 - [ ] search behavior
 - [ ] squad coordination
 - [ ] stealth takedown integration
