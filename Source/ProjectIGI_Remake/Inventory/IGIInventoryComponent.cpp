@@ -1,5 +1,6 @@
 #include "Inventory/IGIInventoryComponent.h"
 
+#include "Combat/IGICombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "Weapons/IGIWeaponBase.h"
@@ -8,6 +9,15 @@
 UIGIInventoryComponent::UIGIInventoryComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
+}
+
+void UIGIInventoryComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    CombatComponent = GetOwner() != nullptr
+        ? GetOwner()->FindComponentByClass<UIGICombatComponent>()
+        : nullptr;
 }
 
 bool UIGIInventoryComponent::TryStoreWeapon(AIGIWeaponBase* Weapon, EIGICarrySlot& OutSlot)
@@ -61,8 +71,91 @@ bool UIGIInventoryComponent::RemoveWeapon(AIGIWeaponBase* Weapon)
         return false;
     }
 
+    if (bHasActiveWeaponSlot && SlotToRemove == ActiveWeaponSlot)
+    {
+        bHasActiveWeaponSlot = false;
+
+        if (IsValid(CombatComponent))
+        {
+            CombatComponent->SetActiveWeapon(nullptr);
+        }
+    }
+
     StoredWeapons.Remove(SlotToRemove);
     Weapon->DropWeapon();
+    return true;
+}
+
+bool UIGIInventoryComponent::EquipWeaponInSlot(const EIGICarrySlot Slot)
+{
+    if (!IsPhysicalWeaponSlot(Slot))
+    {
+        return false;
+    }
+
+    AIGIWeaponBase* Weapon = GetWeaponInSlot(Slot);
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+
+    if (!IsValid(Weapon) || !IsValid(Character) || !IsValid(Character->GetMesh()))
+    {
+        return false;
+    }
+
+    if (bHasActiveWeaponSlot && ActiveWeaponSlot == Slot)
+    {
+        return true;
+    }
+
+    if (bHasActiveWeaponSlot)
+    {
+        if (AIGIWeaponBase* PreviousWeapon = GetWeaponInSlot(ActiveWeaponSlot); IsValid(PreviousWeapon))
+        {
+            AttachStoredWeapon(PreviousWeapon, ActiveWeaponSlot);
+        }
+    }
+
+    const UIGIWeaponDataAsset* Data = Weapon->GetWeaponData();
+    const FName EquipSocket = IsValid(Data) && !Data->EquippedSocket.IsNone()
+        ? Data->EquippedSocket
+        : FName(TEXT("SCK_Weapon_Hand_R"));
+
+    Weapon->EquipTo(Character, Character->GetMesh(), EquipSocket);
+
+    ActiveWeaponSlot = Slot;
+    bHasActiveWeaponSlot = true;
+
+    if (!IsValid(CombatComponent))
+    {
+        CombatComponent = GetOwner()->FindComponentByClass<UIGICombatComponent>();
+    }
+
+    if (IsValid(CombatComponent))
+    {
+        CombatComponent->SetActiveWeapon(Weapon);
+    }
+
+    return true;
+}
+
+bool UIGIInventoryComponent::UnequipActiveWeapon()
+{
+    if (!bHasActiveWeaponSlot)
+    {
+        return false;
+    }
+
+    if (AIGIWeaponBase* Weapon = GetWeaponInSlot(ActiveWeaponSlot); IsValid(Weapon))
+    {
+        AttachStoredWeapon(Weapon, ActiveWeaponSlot);
+    }
+
+    bHasActiveWeaponSlot = false;
+
+    if (IsValid(CombatComponent))
+    {
+        CombatComponent->SetActiveWeapon(nullptr);
+    }
+
     return true;
 }
 
@@ -70,6 +163,11 @@ AIGIWeaponBase* UIGIInventoryComponent::GetWeaponInSlot(const EIGICarrySlot Slot
 {
     const TObjectPtr<AIGIWeaponBase>* Found = StoredWeapons.Find(Slot);
     return Found != nullptr ? Found->Get() : nullptr;
+}
+
+AIGIWeaponBase* UIGIInventoryComponent::GetActiveWeapon() const
+{
+    return bHasActiveWeaponSlot ? GetWeaponInSlot(ActiveWeaponSlot) : nullptr;
 }
 
 FName UIGIInventoryComponent::GetSocketNameForSlot(const EIGICarrySlot Slot) const
@@ -200,7 +298,6 @@ float UIGIInventoryComponent::GetTotalCarryWeightKg() const
         }
     }
 
-    // Small generic mass estimate for pouch-carried throwables / deployables.
     Total += GetEquipmentCount(EIGIEquipmentType::FragGrenade) * 0.40f;
     Total += GetEquipmentCount(EIGIEquipmentType::Flashbang) * 0.35f;
     Total += GetEquipmentCount(EIGIEquipmentType::SmokeGrenade) * 0.55f;
@@ -249,6 +346,14 @@ bool UIGIInventoryComponent::FindFreeCompatibleSlot(
     }
 
     const UIGIWeaponDataAsset* Data = Weapon->GetWeaponData();
+
+    if (IsValid(Data) &&
+        (Data->WeaponFamily == EIGIWeaponFamily::MountedWeapon ||
+         Data->WeaponFamily == EIGIWeaponFamily::Throwable ||
+         Data->WeaponFamily == EIGIWeaponFamily::DeployableExplosive))
+    {
+        return false;
+    }
 
     TArray<EIGICarrySlot> CandidateSlots;
     if (IsValid(Data) && !Data->CompatibleCarrySlots.IsEmpty())
