@@ -8,14 +8,21 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Core/BDFRGameplayTags.h"
 #include "Engine/SkeletalMesh.h"
+#include "Health/BDFRHealthComponent.h"
+#include "Health/BDFRInjuryResponseComponent.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
+#include "Social/BDFRDistressComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 AIGIEnemyCharacter::AIGIEnemyCharacter()
 {
 	AIControllerClass = AIGIEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	HealthComponent = CreateDefaultSubobject<UBDFRHealthComponent>(TEXT("BDFRHealth"));
+	DistressComponent = CreateDefaultSubobject<UBDFRDistressComponent>(TEXT("BDFRDistress"));
+	InjuryResponseComponent = CreateDefaultSubobject<UBDFRInjuryResponseComponent>(TEXT("BDFRInjuryResponse"));
 
 	static ConstructorHelpers::FObjectFinder<UAlsCharacterSettings> CharacterSettingsAsset(
 		TEXT("/ALS/ALS/Data/Character/CS_Als_Default.CS_Als_Default"));
@@ -63,6 +70,24 @@ void AIGIEnemyCharacter::PossessedBy(AController* NewController)
 	RefreshAlsAnimationInstance();
 }
 
+float AIGIEnemyCharacter::TakeDamage(
+	const float DamageAmount,
+	const FDamageEvent& DamageEvent,
+	AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	const float AppliedDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (IsValid(HealthComponent))
+	{
+		HealthComponent->ApplyHealthDamage(
+			AppliedDamage > 0.0f ? AppliedDamage : DamageAmount,
+			DamageCauser);
+	}
+
+	return AppliedDamage;
+}
+
 void AIGIEnemyCharacter::BDFR_SetDesiredGait_Implementation(const FGameplayTag GaitTag)
 {
 	if (GaitTag == BDFRGameplayTags::Locomotion_Gait_Walking)
@@ -108,6 +133,39 @@ void AIGIEnemyCharacter::BDFR_ClearLookTarget_Implementation()
 	if (AAIController* AIController = Cast<AAIController>(GetController()))
 	{
 		AIController->ClearFocus(EAIFocusPriority::Gameplay);
+	}
+}
+
+bool AIGIEnemyCharacter::BDFR_CanReceiveAssistance_Implementation(AActor* Helper) const
+{
+	if (!IsValid(Helper) || Helper == this || !IsValid(HealthComponent))
+	{
+		return false;
+	}
+
+	const FBDFRHealthSnapshot Snapshot = HealthComponent->GetHealthSnapshot();
+
+	return Snapshot.HealthState == EBDFRHealthState::Wounded
+		|| Snapshot.HealthState == EBDFRHealthState::Critical
+		|| Snapshot.HealthState == EBDFRHealthState::Incapacitated
+		|| Snapshot.bBleeding;
+}
+
+FVector AIGIEnemyCharacter::BDFR_GetAssistanceLocation_Implementation(AActor* Helper) const
+{
+	return GetActorLocation();
+}
+
+void AIGIEnemyCharacter::BDFR_BeginAssistance_Implementation(AActor* Helper)
+{
+	SetDesiredAiming(false);
+}
+
+void AIGIEnemyCharacter::BDFR_CompleteAssistance_Implementation(AActor* Helper)
+{
+	if (IsValid(HealthComponent))
+	{
+		HealthComponent->Stabilize(10.0f);
 	}
 }
 
