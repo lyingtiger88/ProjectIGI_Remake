@@ -624,7 +624,7 @@ void AIGIPlayerCharacter::EquipInventorySlot(const EIGICarrySlot Slot)
 bool AIGIPlayerCharacter::CanExpandCapsuleTo(const float TargetHalfHeight) const
 {
 	const UCapsuleComponent* Capsule = GetCapsuleComponent();
-	const UWorld* World = GetWorld();
+	UWorld* World = GetWorld();
 
 	if (!IsValid(Capsule) || !IsValid(World))
 	{
