@@ -13,6 +13,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "Tracking/BDFRTrackEmitterComponent.h"
+#include "Tracking/IGITrackingSurfaceComponent.h"
 #include "Math/RotationMatrix.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
@@ -20,6 +22,9 @@
 
 AIGIPlayerCharacter::AIGIPlayerCharacter()
 {
+	TrackEmitterComponent = CreateDefaultSubobject<UBDFRTrackEmitterComponent>(TEXT("BDFRTrackEmitter"));
+	TrackingSurfaceComponent = CreateDefaultSubobject<UIGITrackingSurfaceComponent>(TEXT("IGITrackingSurface"));
+
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->TargetArmLength = 350.0f;
