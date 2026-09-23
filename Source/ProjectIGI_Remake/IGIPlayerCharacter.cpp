@@ -641,6 +641,19 @@ void AIGIPlayerCharacter::Input_OnJump(const FInputActionValue& ActionValue)
 
 void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 {
+	if (IsValid(VisionComponent) && VisionComponent->IsBinocularsActive())
+	{
+		bAimInputHeld = false;
+		SetDesiredAiming(false);
+
+		if (IsValid(CombatComponent))
+		{
+			CombatComponent->StopAim();
+		}
+
+		return;
+	}
+
 	bAimInputHeld = ActionValue.Get<bool>();
 	SetDesiredAiming(bAimInputHeld);
 
