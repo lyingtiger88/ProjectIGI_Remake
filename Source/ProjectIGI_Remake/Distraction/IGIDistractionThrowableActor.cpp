@@ -3,6 +3,7 @@
 #include "Acoustics/BDFRAcousticEventLibrary.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -16,7 +17,6 @@ AIGIDistractionThrowableActor::AIGIDistractionThrowableActor()
     ThrowableMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
     ThrowableMesh->SetGenerateOverlapEvents(false);
     ThrowableMesh->SetNotifyRigidBodyCollision(true);
-    ThrowableMesh->SetSimulatePhysics(true);
     ThrowableMesh->SetEnableGravity(true);
     ThrowableMesh->SetLinearDamping(0.08f);
     ThrowableMesh->SetAngularDamping(0.15f);
@@ -30,6 +30,8 @@ AIGIDistractionThrowableActor::AIGIDistractionThrowableActor()
         ThrowableMesh->SetStaticMesh(PrototypeMesh.Object);
         ThrowableMesh->SetRelativeScale3D(FVector(0.08f));
     }
+
+    ThrowableMesh->SetSimulatePhysics(true);
 }
 
 void AIGIDistractionThrowableActor::InitializeThrow(
@@ -46,6 +48,9 @@ void AIGIDistractionThrowableActor::InitializeThrow(
         ThrowableMesh->SetStaticMesh(InMesh);
         ThrowableMesh->SetRelativeScale3D(FVector::OneVector);
     }
+
+    ThrowableMesh->SetSimulatePhysics(true);
+    ThrowableMesh->WakeAllRigidBodies();
 
     if (IsValid(ThrowerActor))
     {
