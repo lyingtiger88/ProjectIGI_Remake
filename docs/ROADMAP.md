@@ -66,7 +66,7 @@ This roadmap is intentionally implementation-focused and may change as prototype
 
 ## Milestone 5 — Damage & reactions
 
-- [ ] health component
+- [x] health component
 - [ ] directional hit reactions
 - [ ] death
 - [ ] knockdown / recovery
@@ -101,6 +101,7 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] interaction framework
 - [ ] mission objectives
 - [x] inventory/equipment foundation
+- [x] Med Kit inventory / pickup / healing foundation
 - [x] exact remaining NPC/enemy ammunition loot foundation
 - [ ] smoke air-support / rescue mission hooks
 - [x] flare air-support / rescue signal hook foundation
