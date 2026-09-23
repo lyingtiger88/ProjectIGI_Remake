@@ -6,6 +6,7 @@
 #include "IGIWeaponDataAsset.generated.h"
 
 class USkeletalMesh;
+class UStaticMesh;
 
 UCLASS(BlueprintType)
 class PROJECTIGI_REMAKE_API UIGIWeaponDataAsset : public UPrimaryDataAsset
@@ -27,6 +28,10 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
     TSoftObjectPtr<USkeletalMesh> WeaponMesh;
+
+    // Optional static-mesh fallback used by simple/prototype weapons.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
+    TSoftObjectPtr<UStaticMesh> WeaponStaticMesh;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
     FName EquippedSocket = TEXT("SCK_Weapon_Hand_R");
