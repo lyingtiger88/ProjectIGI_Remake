@@ -12,6 +12,7 @@ AIGIShellCasingActor::AIGIShellCasingActor()
     SetRootComponent(CasingMesh);
 
     CasingMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
+    CasingMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
     CasingMesh->SetGenerateOverlapEvents(false);
     CasingMesh->SetSimulatePhysics(true);
     CasingMesh->SetEnableGravity(true);
