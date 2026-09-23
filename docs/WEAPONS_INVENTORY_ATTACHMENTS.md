@@ -205,3 +205,19 @@ consume one to heal through the health component, and NPC Med Kits can be looted
 using their exact remaining inventory count.
 
 See [MED_KIT.md](MED_KIT.md).
+
+
+## Optical equipment
+
+The inventory also tracks non-weapon optical equipment:
+
+```text
+Binoculars
+NightVisionGoggles
+ThermalViewer
+```
+
+Each is limited to one device and contributes to carried weight/noise. These devices gate the
+corresponding `UIGIVisionComponent` modes.
+
+See [OPTICAL_VISION.md](OPTICAL_VISION.md).
