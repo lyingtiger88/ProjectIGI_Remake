@@ -99,6 +99,15 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0"))
     int32 MaxDistractionObjects = 5;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0", ClampMax = "1"))
+    int32 MaxBinoculars = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0", ClampMax = "1"))
+    int32 MaxNightVisionGoggles = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Limits", meta = (ClampMin = "0", ClampMax = "1"))
+    int32 MaxThermalViewers = 1;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Inventory|Carry")
     float FreeWeightThresholdKg = 8.0f;
 
