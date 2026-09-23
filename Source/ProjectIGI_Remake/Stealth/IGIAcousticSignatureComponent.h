@@ -30,6 +30,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "IGI|Stealth|Acoustics")
     void ReportVault(float Intensity = 1.0f);
 
+    UFUNCTION(BlueprintCallable, Category = "IGI|Stealth|Acoustics")
+    void ReportProneRoll(float Intensity = 1.0f);
+
     UFUNCTION(BlueprintPure, Category = "IGI|Stealth|Acoustics")
     float GetCurrentLoadNoiseMultiplier() const;
 
