@@ -120,6 +120,22 @@ See [WEAPONS_INVENTORY_ATTACHMENTS.md](WEAPONS_INVENTORY_ATTACHMENTS.md).
 `AIGIShellCasingActor` instances use it to adjust initial energy, damping and continuous wind response
 for clear, rain, snow, storm and sandstorm conditions.
 
+### Flare signaling
+
+`AIGIFlareGunBase` is a specialized `AIGIFirearmBase` that launches
+`AIGIFlareProjectileActor` instead of using the hitscan path.
+
+Flare projectiles are physical, gravity/wind affected, emit light, support Niagara trails, and report
+their semantic purpose through `UIGIFlareSignalWorldSubsystem`.
+
+Supported purposes:
+
+- illumination,
+- air-support marker,
+- rescue/extraction.
+
+This gives mission code a world-level event without coupling the weapon directly to mission logic.
+
 ### Inventory and physical carry model
 
 `UIGIInventoryComponent` is a tactical loadout, not an unlimited backpack.
