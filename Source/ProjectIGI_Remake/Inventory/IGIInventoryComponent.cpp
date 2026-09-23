@@ -393,6 +393,7 @@ float UIGIInventoryComponent::GetTotalCarryWeightKg() const
     Total += GetEquipmentCount(EIGIEquipmentType::Flashbang) * 0.35f;
     Total += GetEquipmentCount(EIGIEquipmentType::SmokeGrenade) * 0.55f;
     Total += GetEquipmentCount(EIGIEquipmentType::MedKit) * 0.45f;
+    Total += GetEquipmentCount(EIGIEquipmentType::DistractionObject) * 0.18f;
     Total += GetEquipmentCount(EIGIEquipmentType::C4) * 0.70f;
     Total += GetEquipmentCount(EIGIEquipmentType::ProximityMine) * 1.20f;
     Total += GetEquipmentCount(EIGIEquipmentType::Claymore) * 1.60f;
@@ -417,6 +418,7 @@ float UIGIInventoryComponent::GetMovementNoiseMultiplier() const
         GetEquipmentCount(EIGIEquipmentType::Flashbang) +
         GetEquipmentCount(EIGIEquipmentType::SmokeGrenade) +
         GetEquipmentCount(EIGIEquipmentType::MedKit) +
+        GetEquipmentCount(EIGIEquipmentType::DistractionObject) +
         GetEquipmentCount(EIGIEquipmentType::C4) +
         GetEquipmentCount(EIGIEquipmentType::ProximityMine) +
         GetEquipmentCount(EIGIEquipmentType::Claymore);
@@ -498,6 +500,7 @@ int32 UIGIInventoryComponent::GetEquipmentLimit(const EIGIEquipmentType Equipmen
         case EIGIEquipmentType::Flashbang: return MaxFlashbangs;
         case EIGIEquipmentType::SmokeGrenade: return MaxSmokeGrenades;
         case EIGIEquipmentType::MedKit: return MaxMedKits;
+        case EIGIEquipmentType::DistractionObject: return MaxDistractionObjects;
         case EIGIEquipmentType::C4:
         case EIGIEquipmentType::ProximityMine:
         case EIGIEquipmentType::Claymore:
