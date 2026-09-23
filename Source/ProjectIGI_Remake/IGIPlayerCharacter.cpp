@@ -103,6 +103,13 @@ AIGIPlayerCharacter::AIGIPlayerCharacter()
 	if (AimInputAsset.Succeeded()) { AimAction = AimInputAsset.Object; }
 }
 
+void AIGIPlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	RefreshAlsAnimationInstance();
+	RefreshInputMappingContext();
+}
+
 void AIGIPlayerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -118,40 +125,31 @@ void AIGIPlayerCharacter::PossessedBy(AController* NewController)
 
 void AIGIPlayerCharacter::NotifyControllerChanged()
 {
-	const auto* PreviousPlayer = Cast<APlayerController>(PreviousController);
-	if (IsValid(PreviousPlayer) && IsValid(InputMappingContext))
+	if (auto* PreviousPlayer = Cast<APlayerController>(PreviousController); IsValid(PreviousPlayer))
 	{
-		if (auto* InputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PreviousPlayer->GetLocalPlayer());
-			IsValid(InputSubsystem))
-		{
-			InputSubsystem->RemoveMappingContext(InputMappingContext);
-		}
-	}
-
-	auto* NewPlayer = Cast<APlayerController>(GetController());
-	if (IsValid(NewPlayer) && IsValid(InputMappingContext))
-	{
-		NewPlayer->InputYawScale_DEPRECATED = 1.0f;
-		NewPlayer->InputPitchScale_DEPRECATED = 1.0f;
-		NewPlayer->InputRollScale_DEPRECATED = 1.0f;
-
-		if (auto* InputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(NewPlayer->GetLocalPlayer());
-			IsValid(InputSubsystem))
-		{
-			FModifyContextOptions Options;
-			Options.bNotifyUserSettings = true;
-			InputSubsystem->AddMappingContext(InputMappingContext, 0, Options);
-		}
+		RemoveInputMappingContext(PreviousPlayer);
 	}
 
 	Super::NotifyControllerChanged();
+	RefreshInputMappingContext();
+}
+
+void AIGIPlayerCharacter::PawnClientRestart()
+{
+	Super::PawnClientRestart();
+	RefreshInputMappingContext();
 }
 
 void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (!IsValid(EnhancedInput)) { return; }
+	if (!IsValid(EnhancedInput))
+	{
+		UE_LOG(LogTemp, Error, TEXT("IGI player did not receive an EnhancedInputComponent."));
+		return;
+	}
 
 	if (IsValid(LookMouseAction))
 	{
@@ -280,4 +278,58 @@ void AIGIPlayerCharacter::Input_OnAim(const FInputActionValue& ActionValue)
 void AIGIPlayerCharacter::RefreshAlsAnimationInstance()
 {
 	AnimationInstance = Cast<UAlsAnimationInstance>(GetMesh()->GetAnimInstance());
+}
+
+void AIGIPlayerCharacter::RefreshInputMappingContext()
+{
+	auto* PlayerController = Cast<APlayerController>(GetController());
+	if (!IsValid(PlayerController))
+	{
+		return;
+	}
+
+	if (!IsValid(InputMappingContext))
+	{
+		UE_LOG(LogTemp, Error, TEXT("IGI input mapping context is invalid. ALS input assets were not loaded."));
+		return;
+	}
+
+	auto* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!IsValid(LocalPlayer))
+	{
+		return;
+	}
+
+	auto* InputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+	if (!IsValid(InputSubsystem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("IGI player could not access Enhanced Input Local Player Subsystem."));
+		return;
+	}
+
+	InputSubsystem->RemoveMappingContext(InputMappingContext);
+
+	FModifyContextOptions Options;
+	Options.bNotifyUserSettings = true;
+	InputSubsystem->AddMappingContext(InputMappingContext, 0, Options);
+}
+
+void AIGIPlayerCharacter::RemoveInputMappingContext(APlayerController* PlayerController) const
+{
+	if (!IsValid(PlayerController) || !IsValid(InputMappingContext))
+	{
+		return;
+	}
+
+	auto* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!IsValid(LocalPlayer))
+	{
+		return;
+	}
+
+	if (auto* InputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+		IsValid(InputSubsystem))
+	{
+		InputSubsystem->RemoveMappingContext(InputMappingContext);
+	}
 }
