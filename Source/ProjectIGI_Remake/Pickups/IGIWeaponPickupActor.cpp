@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "IGIPlayerCharacter.h"
 #include "Inventory/IGIInventoryComponent.h"
+#include "Weapons/IGIFirearmBase.h"
 #include "Weapons/IGIWeaponBase.h"
 #include "Weapons/IGIWeaponDataAsset.h"
 
@@ -23,6 +24,8 @@ AIGIWeaponPickupActor::AIGIWeaponPickupActor()
     PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
     PickupMesh->SetupAttachment(PickupSphere);
     PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    WeaponClass = AIGIFirearmBase::StaticClass();
 }
 
 void AIGIWeaponPickupActor::BeginPlay()
@@ -52,7 +55,9 @@ void AIGIWeaponPickupActor::HandlePickupOverlap(
 bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
 {
     AIGIPlayerCharacter* Player = Cast<AIGIPlayerCharacter>(OtherActor);
-    if (!IsValid(Player) || !IsValid(WeaponData) || !WeaponClass)
+    UIGIWeaponDataAsset* ResolvedWeaponData = ResolveWeaponData();
+
+    if (!IsValid(Player) || !IsValid(ResolvedWeaponData) || !WeaponClass)
     {
         return false;
     }
@@ -80,7 +85,7 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
         return false;
     }
 
-    Weapon->InitializeFromData(WeaponData);
+    Weapon->InitializeFromData(ResolvedWeaponData);
 
     EIGICarrySlot StoredSlot = EIGICarrySlot::Weapon01;
     if (!Inventory->TryStoreWeapon(Weapon, StoredSlot))
@@ -89,12 +94,12 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
         return false;
     }
 
-    if (!WeaponData->AmmoType.IsNone() && InitialReserveAmmo > 0)
+    if (!ResolvedWeaponData->AmmoType.IsNone() && InitialReserveAmmo > 0)
     {
         Inventory->AddAmmo(
-            WeaponData->AmmoType,
+            ResolvedWeaponData->AmmoType,
             InitialReserveAmmo,
-            FMath::Max(InitialReserveAmmo, WeaponData->MaxReserveAmmo));
+            FMath::Max(InitialReserveAmmo, ResolvedWeaponData->MaxReserveAmmo));
     }
 
     if (bAutoEquip)
@@ -106,8 +111,74 @@ bool AIGIWeaponPickupActor::TryGiveWeaponTo(AActor* OtherActor)
         LogTemp,
         Log,
         TEXT("IGI picked up weapon '%s' into slot %d."),
-        *WeaponData->DisplayName.ToString(),
+        *ResolvedWeaponData->DisplayName.ToString(),
         static_cast<int32>(StoredSlot));
 
     return true;
+}
+
+UIGIWeaponDataAsset* AIGIWeaponPickupActor::ResolveWeaponData()
+{
+    if (IsValid(WeaponData))
+    {
+        return WeaponData;
+    }
+
+    if (IsValid(RuntimePrototypeData))
+    {
+        return RuntimePrototypeData;
+    }
+
+    if (PrototypePreset == EIGIPrototypeWeaponPreset::Glock17)
+    {
+        RuntimePrototypeData = CreateGlock17PrototypeData();
+    }
+
+    return RuntimePrototypeData;
+}
+
+UIGIWeaponDataAsset* AIGIWeaponPickupActor::CreateGlock17PrototypeData()
+{
+    UIGIWeaponDataAsset* Data = NewObject<UIGIWeaponDataAsset>(this, TEXT("Runtime_Glock17_Data"));
+    if (!IsValid(Data))
+    {
+        return nullptr;
+    }
+
+    Data->WeaponId = EIGIWeaponId::Glock17;
+    Data->DisplayName = FText::FromString(TEXT("Glock 17"));
+    Data->WeaponFamily = EIGIWeaponFamily::Pistol;
+    Data->HandlingProfile = EIGIHandlingProfile::Pistol;
+    Data->CompatibleCarrySlots = {
+        EIGICarrySlot::Weapon03,
+        EIGICarrySlot::Weapon01,
+        EIGICarrySlot::Weapon02,
+        EIGICarrySlot::Weapon04
+    };
+    Data->WeightKg = 0.92f;
+    Data->CarryNoiseContribution = 0.035f;
+    Data->SupportedAttachmentSlots = {
+        EIGIAttachmentSlot::Muzzle,
+        EIGIAttachmentSlot::Optic,
+        EIGIAttachmentSlot::SideRail,
+        EIGIAttachmentSlot::Magazine
+    };
+    Data->AmmoType = TEXT("9x19mm");
+    Data->MagazineCapacity = 17;
+    Data->MaxReserveAmmo = 102;
+    Data->SupportedFireModes = {EIGIFireMode::SemiAutomatic};
+    Data->DefaultFireMode = EIGIFireMode::SemiAutomatic;
+    Data->BaseDamage = 28.0f;
+    Data->EffectiveRangeCm = 5000.0f;
+    Data->BaseRecoil = 1.0f;
+    Data->BaseSpread = 0.35f;
+    Data->AimSpeedMultiplier = 1.0f;
+    Data->BaseShotHearingRadius = 6500.0f;
+    Data->EquipNoiseLoudness = 0.10f;
+    Data->EquipNoiseRadius = 650.0f;
+    Data->ReloadNoiseLoudness = 0.14f;
+    Data->ReloadNoiseRadius = 800.0f;
+    Data->BaseMuzzleFlashScale = 1.0f;
+
+    return Data;
 }
