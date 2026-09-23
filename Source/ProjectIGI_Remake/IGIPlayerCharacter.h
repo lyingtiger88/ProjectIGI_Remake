@@ -7,6 +7,7 @@
 #include "Weapons/IGIWeaponTypes.h"
 #include "IGIPlayerCharacter.generated.h"
 
+class AIGIDistractionThrowableActor;
 class APlayerController;
 class UCameraComponent;
 class UBDFRTrackEmitterComponent;
@@ -18,6 +19,7 @@ class UIGITrackingSurfaceComponent;
 class UInputAction;
 class UInputMappingContext;
 class USpringArmComponent;
+class UStaticMesh;
 struct FInputActionValue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
@@ -77,6 +79,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "IGI|Health")
 	bool UseMedKit();
+
+	UFUNCTION(BlueprintCallable, Category = "IGI|Distraction")
+	bool ThrowDistractionObject();
 
 	UFUNCTION(BlueprintPure, Category = "IGI|Stealth")
 	UIGIAcousticSignatureComponent* GetAcousticSignatureComponent() const { return AcousticSignatureComponent; }
@@ -159,6 +164,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Health", meta = (ClampMin = "1.0"))
 	float MedKitHealAmount = 45.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Distraction")
+	TSubclassOf<AIGIDistractionThrowableActor> DistractionThrowableClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Distraction")
+	TSoftObjectPtr<UStaticMesh> DistractionThrowableMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Distraction", meta = (ClampMin = "100.0", ForceUnits = "cm/s"))
+	float DistractionThrowSpeed = 1350.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Distraction", meta = (ClampMin = "0.0", ForceUnits = "cm/s"))
+	float DistractionThrowUpwardSpeed = 130.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Stealth")
 	TObjectPtr<UIGIAcousticSignatureComponent> AcousticSignatureComponent;
@@ -289,6 +306,7 @@ protected:
 	void Input_OnProneRollLeft();
 	void Input_OnProneRollRight();
 	void Input_OnUseMedKit();
+	void Input_OnThrowDistraction();
 
 private:
 	UPROPERTY(Transient)
