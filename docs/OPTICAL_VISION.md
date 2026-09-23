@@ -109,8 +109,9 @@ Recommended presentation:
 - vignette,
 - overexposure from strong lights.
 
-The gameplay framework only controls ownership and mode activation; the exact shader look remains an
-editor-authored Material so it can be tuned without rebuilding C++.
+A built-in green-tinted fallback grade is applied even when no Material is assigned, so the mode is
+immediately testable from C++ alone. An editor-authored Material can then add grain, phosphor noise,
+lens distortion, bloom shaping, and other final presentation without rebuilding C++.
 
 ## Thermal / infrared
 
@@ -121,6 +122,10 @@ ThermalPostProcessMaterial
 ```
 
 and an opt-in `UIGIThermalSignatureComponent`.
+
+A built-in warm/high-contrast fallback grade makes Thermal mode visibly testable even without a
+custom Material. Selective hot-target rendering still requires the production Thermal Post Process
+material described below.
 
 The thermal signature component marks its owner's primitive components through Custom Depth / Custom
 Stencil.
