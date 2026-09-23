@@ -34,6 +34,9 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype")
     bool bUsePrototypePistolSuppressor = false;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup|Prototype")
+    TSoftObjectPtr<UStaticMesh> PrototypeSuppressorMesh;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Pickup")
     bool bReplaceExistingAttachment = true;
 
