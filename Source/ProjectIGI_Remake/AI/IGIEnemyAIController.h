@@ -2,11 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "AI/IGIDistractionTypes.h"
+#include "AI/IGIEnemyTacticalTypes.h"
 #include "Behavior/BDFRAIController.h"
 #include "Core/BDFRAITypes.h"
 #include "Difficulty/BDFRDifficultyTypes.h"
 #include "TimerManager.h"
 #include "IGIEnemyAIController.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FIGIEnemyTacticalStateChangedSignature,
+	EIGIEnemyTacticalState,
+	PreviousState,
+	EIGIEnemyTacticalState,
+	NewState);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(
 	FIGIDistractionAcceptedSignature,
@@ -39,8 +47,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "IGI|AI|Distraction")
 	void ClearDistraction();
 
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Tactical")
+	EIGIEnemyTacticalState GetTacticalState() const { return TacticalState; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Tactical")
+	FVector GetSearchCenter() const { return SearchCenter; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Tactical")
+	FVector GetCoverLocation() const { return CoverLocation; }
+
+	UFUNCTION(BlueprintPure, Category = "IGI|AI|Tactical")
+	bool IsDead() const { return TacticalState == EIGIEnemyTacticalState::Dead; }
+
 	UPROPERTY(BlueprintAssignable, Category = "IGI|AI|Distraction")
 	FIGIDistractionAcceptedSignature OnDistractionAccepted;
+
+	UPROPERTY(BlueprintAssignable, Category = "IGI|AI|Tactical")
+	FIGIEnemyTacticalStateChangedSignature OnTacticalStateChanged;
 
 protected:
 	virtual void BeginPlay() override;
@@ -74,6 +97,36 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Distraction|Difficulty")
 	FIGIDistractionDifficultyTuning SASDistractionTuning;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical")
+	bool bEnablePrototypeTacticalMovement = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical|Search", meta = (ClampMin = "100.0", ForceUnits = "cm"))
+	float SearchRadius = 750.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical|Search", meta = (ClampMin = "1", ClampMax = "12"))
+	int32 SearchPointCount = 4;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical|Search", meta = (ClampMin = "0.5", ForceUnits = "s"))
+	float SearchStepSeconds = 2.4f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical|Cover", meta = (ClampMin = "200.0", ForceUnits = "cm"))
+	float CoverSearchRadius = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical|Cover", meta = (ClampMin = "10.0", ForceUnits = "cm"))
+	float CoverAcceptanceRadius = 90.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Tactical|Cover", meta = (ClampMin = "1", ClampMax = "24"))
+	int32 CoverQueryAttempts = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Damage", meta = (ClampMin = "0.0", ForceUnits = "s"))
+	float HitReactionPauseSeconds = 0.18f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Death")
+	bool bRagdollOnDeath = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|AI|Death", meta = (ClampMin = "0.0", ForceUnits = "s"))
+	float CorpseLifeSeconds = 0.0f;
+
 private:
 	UPROPERTY(Transient)
 	bool bHasActiveDistraction = false;
@@ -92,6 +145,19 @@ private:
 	int32 RepeatedDistractionCount = 0;
 
 	FTimerHandle ClearDistractionTimer;
+	FTimerHandle SearchStepTimer;
+	FTimerHandle HitReactionTimer;
+
+	UPROPERTY(Transient)
+	EIGIEnemyTacticalState TacticalState = EIGIEnemyTacticalState::Idle;
+
+	UPROPERTY(Transient)
+	FVector SearchCenter = FVector::ZeroVector;
+
+	UPROPERTY(Transient)
+	FVector CoverLocation = FVector::ZeroVector;
+
+	int32 SearchStepIndex = 0;
 
 	UFUNCTION()
 	void HandleAcousticEventPerceived(
@@ -105,6 +171,24 @@ private:
 		AActor* TargetActor,
 		float Awareness,
 		EBDFRAwarenessLevel AwarenessLevel);
+
+	UFUNCTION()
+	void HandleEnemyDeath(AActor* DeadActor, AActor* DamageCauser);
+
+	UFUNCTION()
+	void HandleEnemyHitReaction(
+		AActor* HitActor,
+		float Damage,
+		FVector HitLocation,
+		FVector ShotDirection,
+		FName BoneName,
+		AActor* DamageCauser);
+
+	UFUNCTION()
+	void AdvanceSearch();
+
+	UFUNCTION()
+	void ResumeAfterHitReaction();
 
 	bool ShouldAcceptDistraction(
 		const FVector& Location,
@@ -120,4 +204,14 @@ private:
 
 	const FIGIDistractionDifficultyTuning& GetCurrentDistractionTuning() const;
 	static float GetAwarenessPenalty(EBDFRAwarenessLevel AwarenessLevel);
+
+	void EnsureEnemyGameplayComponents(APawn* InPawn);
+	void SetTacticalState(EIGIEnemyTacticalState NewState);
+	void RefreshTacticalResponse(AActor* TargetActor);
+	void BeginSearch(const FVector& InSearchCenter);
+	bool TryMoveToCover(const FVector& ThreatLocation);
+	bool FindCoverLocation(const FVector& ThreatLocation, FVector& OutCoverLocation) const;
+	bool ShouldTakeCover() const;
+	void ClearTacticalTimers();
+	void ApplyDeathPresentation(APawn* DeadPawn);
 };
