@@ -22,6 +22,8 @@
 #include "InputMappingContext.h"
 #include "Inventory/IGIInventoryComponent.h"
 #include "InputCoreTypes.h"
+#include "Interaction/IGIInteractable.h"
+#include "Mission/IGIMissionWorldSubsystem.h"
 #include "Math/RotationMatrix.h"
 #include "Settings/AlsCharacterSettings.h"
 #include "Settings/AlsMovementSettings.h"
@@ -146,6 +148,13 @@ void AIGIPlayerCharacter::BeginPlay()
 		VisionComponent->InitializeVision(FollowCamera, InventoryComponent);
 	}
 
+	if (IsValid(HealthComponent))
+	{
+		HealthComponent->OnDeath.AddDynamic(
+			this,
+			&ThisClass::HandlePlayerDeath);
+	}
+
 	if (IsValid(GetCapsuleComponent()))
 	{
 		StandingCapsuleHalfHeight = GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
@@ -260,6 +269,7 @@ void AIGIPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindKey(EKeys::Q, IE_Pressed, this, &ThisClass::Input_OnSwitchShoulder);
 	PlayerInputComponent->BindKey(EKeys::H, IE_Pressed, this, &ThisClass::Input_OnUseMedKit);
 	PlayerInputComponent->BindKey(EKeys::T, IE_Pressed, this, &ThisClass::Input_OnThrowDistraction);
+	PlayerInputComponent->BindKey(EKeys::E, IE_Pressed, this, &ThisClass::Input_OnInteract);
 	PlayerInputComponent->BindKey(EKeys::B, IE_Pressed, this, &ThisClass::Input_OnToggleBinoculars);
 	PlayerInputComponent->BindKey(EKeys::N, IE_Pressed, this, &ThisClass::Input_OnToggleNightVision);
 	PlayerInputComponent->BindKey(EKeys::V, IE_Pressed, this, &ThisClass::Input_OnToggleThermal);
@@ -807,6 +817,71 @@ void AIGIPlayerCharacter::Input_OnThrowDistraction()
 	ThrowDistractionObject();
 }
 
+void AIGIPlayerCharacter::Input_OnInteract()
+{
+	TryInteract();
+}
+
+bool AIGIPlayerCharacter::TryInteract()
+{
+	if (bProneRolling || !IsValid(GetController()))
+	{
+		return false;
+	}
+
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return false;
+	}
+
+	FVector ViewLocation;
+	FRotator ViewRotation;
+	GetController()->GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	const FVector TraceEnd =
+		ViewLocation + ViewRotation.Vector() * InteractionDistance;
+
+	FCollisionQueryParams QueryParams(
+		SCENE_QUERY_STAT(IGIInteractionTrace),
+		false,
+		this);
+	QueryParams.AddIgnoredActor(this);
+
+	FHitResult Hit;
+	if (!World->LineTraceSingleByChannel(
+			Hit,
+			ViewLocation,
+			TraceEnd,
+			ECC_Visibility,
+			QueryParams))
+	{
+		return false;
+	}
+
+	AActor* HitActor = Hit.GetActor();
+	if (!IsValid(HitActor) ||
+		!HitActor->GetClass()->ImplementsInterface(UIGIInteractable::StaticClass()))
+	{
+		return false;
+	}
+
+	if (!IIGIInteractable::Execute_CanInteract(HitActor, this))
+	{
+		return false;
+	}
+
+	IIGIInteractable::Execute_Interact(HitActor, this);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("IGI interaction: %s"),
+		*HitActor->GetName());
+
+	return true;
+}
+
 void AIGIPlayerCharacter::Input_OnToggleBinoculars()
 {
 	if (!IsValid(VisionComponent))
@@ -1283,5 +1358,24 @@ void AIGIPlayerCharacter::RemoveInputMappingContext(APlayerController* PlayerCon
 		IsValid(InputSubsystem))
 	{
 		InputSubsystem->RemoveMappingContext(InputMappingContext);
+	}
+}
+
+
+void AIGIPlayerCharacter::HandlePlayerDeath(
+	AActor* DeadActor,
+	AActor* DamageCauser)
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return;
+	}
+
+	if (UIGIMissionWorldSubsystem* Mission =
+			World->GetSubsystem<UIGIMissionWorldSubsystem>();
+		IsValid(Mission))
+	{
+		Mission->FailMission(TEXT("PlayerKilled"));
 	}
 }
