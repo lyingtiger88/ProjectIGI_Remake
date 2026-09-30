@@ -18,7 +18,6 @@ void UIGIMissionWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
             &ThisClass::HandleFlareSignal);
     }
 
-    StartMission();
 }
 
 void UIGIMissionWorldSubsystem::Deinitialize()
@@ -144,12 +143,20 @@ void UIGIMissionWorldSubsystem::HandleFlareSignal(
         return;
     }
 
-    APawn* FlareInstigator = IsValid(FlareActor)
-        ? FlareActor->GetInstigator()
-        : nullptr;
+    AActor* CompletionActor = nullptr;
 
-    if (!IsValid(FlareInstigator) ||
-        !FlareInstigator->IsA<AIGIPlayerCharacter>())
+    if (IsValid(FlareActor))
+    {
+        CompletionActor = FlareActor->GetInstigator();
+
+        if (!IsValid(CompletionActor))
+        {
+            CompletionActor = FlareActor->GetOwner();
+        }
+    }
+
+    if (!IsValid(CompletionActor) ||
+        !CompletionActor->IsA<AIGIPlayerCharacter>())
     {
         return;
     }
@@ -166,7 +173,7 @@ void UIGIMissionWorldSubsystem::HandleFlareSignal(
     }
 
     SetMissionState(EIGIMissionState::Completed);
-    OnMissionCompleted.Broadcast(FlareInstigator);
+    OnMissionCompleted.Broadcast(CompletionActor);
     ShowMissionMessage(TEXT("MISSION COMPLETE: Extraction signal confirmed."));
 }
 
