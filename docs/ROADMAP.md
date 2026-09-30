@@ -99,13 +99,14 @@ This roadmap is intentionally implementation-focused and may change as prototype
 
 ## Milestone 7 — Tactical gameplay
 
-- [ ] interaction framework
-- [ ] mission objectives
+- [x] interaction framework foundation
+- [x] primary objective / extraction mission-loop foundation
 - [x] inventory/equipment foundation
 - [x] Med Kit inventory / pickup / healing foundation
 - [x] exact remaining NPC/enemy ammunition loot foundation
 - [ ] smoke air-support / rescue mission hooks
 - [x] flare air-support / rescue signal hook foundation
+- [x] vertical-slice mission director + flare extraction completion
 - [ ] C4 / Claymore placement and detonation behavior
 - [ ] checkpoints/save data
 - [x] binocular / night-vision / thermal vision foundation

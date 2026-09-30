@@ -156,6 +156,31 @@ SCK_Utility_Explosive
 
 Weapon Data Assets define compatible carry slots, so body/socket compatibility is part of weapon configuration.
 
+### Interaction and vertical-slice mission flow
+
+`IIGIInteractable` is the project-owned generic interaction contract. The player uses a short
+camera-centered visibility trace and invokes the interface instead of knowing about individual
+objective, loot, terminal, or mission-actor classes.
+
+`UIGIMissionWorldSubsystem` owns the minimal mission state machine:
+
+```text
+Inactive -> PrimaryObjective -> Extraction -> Completed
+                                  \\-> Failed
+```
+
+`AIGIVerticalSliceMissionDirectorActor` configures and starts a level mission.
+`AIGIObjectiveInteractableActor` completes the configured primary objective through the interaction
+interface. `AIGIExtractionZoneActor` registers the extraction region.
+
+The mission subsystem listens to the existing `UIGIFlareSignalWorldSubsystem`. A player-owned
+RescueExtraction flare inside the registered extraction zone completes the mission after the primary
+objective has been secured.
+
+Player death routes through `UIGIHealthComponent::OnDeath` and fails only an active mission.
+
+See [VERTICAL_SLICE.md](VERTICAL_SLICE.md).
+
 ### Health and medical equipment
 
 `UIGIHealthComponent` is the shared health foundation. It listens to Unreal damage events, owns
