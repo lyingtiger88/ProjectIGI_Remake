@@ -413,7 +413,14 @@ void AIGIEnemyAIController::AdvanceSearch()
 		}
 		else
 		{
-			SetTacticalState(EIGIEnemyTacticalState::Investigate);
+			if (IsValid(GetAwarenessComponent()))
+			{
+				GetAwarenessComponent()->ForgetTarget();
+			}
+
+			StopMovement();
+			ClearFocus(EAIFocusPriority::Gameplay);
+			SetTacticalState(EIGIEnemyTacticalState::Idle);
 			return;
 		}
 	}
@@ -479,6 +486,19 @@ void AIGIEnemyAIController::ResumeAfterHitReaction()
 	AActor* TargetActor = IsValid(GetAwarenessComponent())
 		? GetAwarenessComponent()->GetCurrentTarget()
 		: nullptr;
+
+	if (IsValid(TargetActor) && IsValid(GetAwarenessComponent()))
+	{
+		const FBDFRAwarenessSnapshot Snapshot =
+			GetAwarenessComponent()->GetSnapshot();
+
+		if (Snapshot.bHasLineOfSight &&
+			ShouldTakeCover() &&
+			TryMoveToCover(TargetActor->GetActorLocation()))
+		{
+			return;
+		}
+	}
 
 	RefreshTacticalResponse(TargetActor);
 }
