@@ -84,6 +84,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "IGI|Distraction")
 	bool ThrowDistractionObject();
 
+	UFUNCTION(BlueprintCallable, Category = "IGI|Interaction")
+	bool TryInteract();
+
 	UFUNCTION(BlueprintPure, Category = "IGI|Vision")
 	UIGIVisionComponent* GetVisionComponent() const { return VisionComponent; }
 
@@ -180,6 +183,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Distraction", meta = (ClampMin = "0.0", ForceUnits = "cm/s"))
 	float DistractionThrowUpwardSpeed = 130.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "IGI|Interaction", meta = (ClampMin = "100.0", ForceUnits = "cm"))
+	float InteractionDistance = 350.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "IGI|Vision")
 	TObjectPtr<UIGIVisionComponent> VisionComponent;
@@ -323,6 +329,7 @@ protected:
 	void Input_OnProneRollRight();
 	void Input_OnUseMedKit();
 	void Input_OnThrowDistraction();
+	void Input_OnInteract();
 	void Input_OnToggleBinoculars();
 	void Input_OnToggleNightVision();
 	void Input_OnToggleThermal();
@@ -368,4 +375,7 @@ private:
 	void RefreshAlsAnimationInstance();
 	void RefreshInputMappingContext();
 	void RemoveInputMappingContext(APlayerController* PlayerController) const;
+
+	UFUNCTION()
+	void HandlePlayerDeath(AActor* DeadActor, AActor* DamageCauser);
 };
