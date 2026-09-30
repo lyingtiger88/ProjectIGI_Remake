@@ -2,6 +2,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "Mission/IGIMissionWorldSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
