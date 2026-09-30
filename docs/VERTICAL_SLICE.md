@@ -221,3 +221,11 @@ The next production passes should focus on quality rather than adding unrelated 
 5. prone/supine and weapon animation layers,
 6. checkpoint/save state for the mission,
 7. authored test map and regression checklist.
+
+
+## Enemy combat response
+
+The slice now includes source-only enemy health/death, directional hit-reaction events,
+last-known-location searching, difficulty-weighted cover use, and a Canvas development HUD.
+
+See [ENEMY_COMBAT_AI_HUD.md](ENEMY_COMBAT_AI_HUD.md).
