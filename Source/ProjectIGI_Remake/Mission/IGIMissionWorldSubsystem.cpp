@@ -116,7 +116,8 @@ void UIGIMissionWorldSubsystem::UnregisterExtractionZone(AActor* ZoneActor)
 
 void UIGIMissionWorldSubsystem::FailMission(const FName FailureReason)
 {
-    if (MissionState == EIGIMissionState::Completed ||
+    if (MissionState == EIGIMissionState::Inactive ||
+        MissionState == EIGIMissionState::Completed ||
         MissionState == EIGIMissionState::Failed)
     {
         return;
