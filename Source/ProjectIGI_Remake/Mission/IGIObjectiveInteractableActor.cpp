@@ -4,6 +4,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Mission/IGIMissionWorldSubsystem.h"
+#include "UObject/ConstructorHelpers.h"
 
 AIGIObjectiveInteractableActor::AIGIObjectiveInteractableActor()
 {
@@ -20,6 +21,15 @@ AIGIObjectiveInteractableActor::AIGIObjectiveInteractableActor()
     ObjectiveMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ObjectiveMesh"));
     ObjectiveMesh->SetupAttachment(InteractionBounds);
     ObjectiveMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ObjectiveMesh->SetRelativeScale3D(FVector(0.35f, 0.45f, 0.12f));
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> PrototypeMesh(
+        TEXT("/Engine/BasicShapes/Cube.Cube"));
+
+    if (PrototypeMesh.Succeeded())
+    {
+        ObjectiveMesh->SetStaticMesh(PrototypeMesh.Object);
+    }
 }
 
 bool AIGIObjectiveInteractableActor::CanInteract_Implementation(
