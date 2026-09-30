@@ -24,12 +24,13 @@ ProjectIGI Remake is built with a hybrid Unreal Engine workflow:
 - INI configuration for engine/runtime settings
 - Materials and shaders for rendering systems
 
-Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/prone stance control with prone rolling, supine/on-back aiming, and stance-aware camera behavior, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, muzzle flash/smoke, weather-aware shell casings, exact NPC ammo loot, health/Med Kit gameplay, difficulty-aware throwable distractions, binocular/NVG/thermal optics, a primary-objective-to-flare-extraction vertical slice, suppressor-aware AI hearing, and movement/load acoustic signatures.
+Current gameplay foundations include ALS locomotion, ProjectIGI standing/crouch/prone stance control with prone rolling, supine/on-back aiming, and stance-aware camera behavior, BDFR perception/tracking, a four-slot physical weapon inventory, data-driven firearms and attachments, muzzle flash/smoke, weather-aware shell casings, exact NPC ammo loot, health/Med Kit gameplay, difficulty-aware throwable distractions, binocular/NVG/thermal optics, a primary-objective-to-flare-extraction vertical slice, enemy search/cover/death reactions, source HUD, suppressor-aware AI hearing, and movement/load acoustic signatures.
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Vertical Slice Mission Loop](docs/VERTICAL_SLICE.md)
+- [Enemy Combat AI, Death & HUD](docs/ENEMY_COMBAT_AI_HUD.md)
 - [Build Guide](docs/BUILD.md)
 - [Weapons, Inventory & Attachments](docs/WEAPONS_INVENTORY_ATTACHMENTS.md)
 - [Weapon FX, Weather Casings & Exact Ammo Loot](docs/WEAPON_FX_WEATHER_LOOT.md)

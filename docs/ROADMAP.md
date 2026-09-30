@@ -67,8 +67,8 @@ This roadmap is intentionally implementation-focused and may change as prototype
 ## Milestone 5 — Damage & reactions
 
 - [x] health component
-- [ ] directional hit reactions
-- [ ] death
+- [x] directional hit-reaction gameplay/event foundation
+- [x] enemy death/ragdoll gameplay foundation
 - [ ] knockdown / recovery
 - [ ] damage tags/types
 
@@ -91,9 +91,9 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] visible footprint decals / presentation
 - [ ] Behavior Tree tasks for trail navigation
 - [ ] suspicion/alert game-state integration
-- [ ] cover behavior
+- [x] prototype cover behavior / NavMesh cover query
 - [x] difficulty-aware throwable distraction foundation
-- [ ] search behavior
+- [x] last-known-location search behavior foundation
 - [ ] squad coordination
 - [ ] stealth takedown integration
 
@@ -111,5 +111,6 @@ This roadmap is intentionally implementation-focused and may change as prototype
 - [ ] checkpoints/save data
 - [x] binocular / night-vision / thermal vision foundation
 - [ ] optical-device animations and final post-process materials
-- [ ] UI/HUD
+- [x] source Canvas HUD foundation
+- [ ] production UI/HUD
 - [ ] polish and optimization
