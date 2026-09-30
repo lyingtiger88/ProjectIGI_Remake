@@ -218,6 +218,27 @@ Enemy and canine IGI controllers automatically add that component to possessed p
 
 See [OPTICAL_VISION.md](OPTICAL_VISION.md).
 
+### Enemy combat response and death
+
+`AIGIEnemyAIController` now provides a project tactical layer above BDFR awareness:
+
+```text
+Idle / Investigate / Search / TakeCover / Combat / Dead
+```
+
+BDFR remains the source of perception, awareness level, line-of-sight state, last-known location, and
+difficulty. ProjectIGI consumes those signals to drive prototype search/cover movement.
+
+Enemy pawns are supplied with project health, hit-reaction, lootable inventory, and thermal-signature
+components when possessed. Point damage drives animation-facing directional hit data. Health death
+stops AI, emits an ally-down distress stimulus, ragdolls Character pawns, and leaves the corpse
+available for deterministic loot.
+
+`AIGIHUD` provides a source-only Canvas HUD for mission, health, equipment, and firearm ammunition
+during the vertical-slice phase.
+
+See [ENEMY_COMBAT_AI_HUD.md](ENEMY_COMBAT_AI_HUD.md).
+
 ### Difficulty-aware distraction
 
 Thrown distraction objects report semantic BDFR acoustic events with the thrown object as the
